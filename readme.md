@@ -23,5 +23,5 @@ It has been tested with the following sdr clients
 It can be built with Visual Studio 2013 or Visual Studio 2013 Express desktop edition.
 It uses .net4.5
 
-![Patroclus](docs/patroculus.jpg)
+![Patroclus](docs/patroclus.jpg)
 
