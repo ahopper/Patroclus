@@ -259,7 +259,7 @@ namespace fakehermes
             if (received[2] == 2)
             {
                 //discovery
-                byte[] response = new byte[64];
+                byte[] response = new byte[60];
                 response[0] = 0xef;
                 response[1] = 0xfe;
                 response[2] = 0x02;
@@ -272,10 +272,11 @@ namespace fakehermes
                 response[8] = 0x01;
 
                 response[9] = hermesCodeVersion;//code version
-                response[10] = 0x02;//board type
+                response[10] = 0x01;//board type
                 status = "Discovered";
                 seqNo = 1;
                 client.Send(response, response.Length, packet.endPoint);
+                packetsSent++;
             }
             else if (received[2] == 4)
             {
@@ -302,6 +303,10 @@ namespace fakehermes
                 //standard data packet
                 handleCommandControl(received[11], received[12], received[13], received[14], received[15]);
                 handleCommandControl(received[512 + 11], received[512 + 12], received[512 + 13], received[512 + 14], received[512 + 15]);
+            }
+            else
+            {
+
             }
 
         }
