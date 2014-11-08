@@ -1,0 +1,52 @@
+﻿<UserControl x:Class="patroclus.IntMultiSpinner"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             mc:Ignorable="d" 
+             xmlns:l="clr-namespace:patroclus"
+             d:DesignHeight="40" d:DesignWidth="140">
+    <UserControl.Resources>
+        <l:MultiNumberToColumnConverter x:Key="numberToColConverter" />
+        <l:ColToMarginConverter x:Key="ColToMarginConverter" />
+    </UserControl.Resources>
+    <Grid x:Name="LayoutRoot" >
+        <Border BorderThickness="1" BorderBrush="Black"></Border>
+        <ItemsControl ItemsSource="{Binding Path=columns}" x:Name="tbContainer">
+            <ItemsControl.ItemsPanel>
+                <ItemsPanelTemplate>
+                    <StackPanel Orientation="Horizontal" Margin="2,1,2,1"  />
+                </ItemsPanelTemplate>
+            </ItemsControl.ItemsPanel>
+            <ItemsControl.ItemTemplate>
+                <DataTemplate>
+                <TextBox 
+                            MaxLength="1" 
+                            MouseWheel="TextBox_MouseWheel" 
+                            PreviewKeyDown="TextBox_PreviewKeyDown" 
+                            GotFocus="TextBox_GotFocus" 
+                            BorderThickness="0"
+                            Padding="0,2,0,2"
+                            IsTabStop="{Binding Path=first}"
+                            
+                             >
+                    <TextBox.Margin>
+                            <MultiBinding Converter="{StaticResource ColToMarginConverter}" Mode="OneWay">
+                            <Binding Path="FontSize" RelativeSource="{RelativeSource FindAncestor, 
+                                    AncestorType={x:Type l:IntMultiSpinner}}"/>
+                            <Binding Path=""/>
+                        </MultiBinding>
+                    </TextBox.Margin>
+                    <TextBox.Text>
+                            <MultiBinding Converter="{StaticResource numberToColConverter}" Mode="OneWay">
+                            <Binding Path="Value" RelativeSource="{RelativeSource FindAncestor, 
+                                    AncestorType={x:Type l:IntMultiSpinner}}"/>
+                            <Binding Path="col"/>
+                        </MultiBinding>
+                    </TextBox.Text>
+                </TextBox>
+                </DataTemplate>
+            </ItemsControl.ItemTemplate>
+        </ItemsControl>
+    </Grid>
+</UserControl>
