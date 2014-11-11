@@ -9,15 +9,18 @@ using System.Net.Sockets;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using System.Windows.Data;
+using System.Windows.Input;
 
-namespace fakehermes
+namespace patroclus
 {
     public class FakeHermes : BindableBase
     {
         private UdpClient client;
+        private Thread handleCommsThread;
+
         public int port { get; set; } //Port for the Client to use
 
-        System.Windows.Threading.DispatcherTimer timer = new System.Windows.Threading.DispatcherTimer();
         ConcurrentQueue<receivedPacket> msgQueue = new ConcurrentQueue<receivedPacket>();
         
         IPEndPoint ClientIpEndPoint;
@@ -35,6 +38,18 @@ namespace fakehermes
         bool running = false;
 
         private static int[] bandwidths={48000,96000,192000,384000};
+
+        public FakeHermes()
+        {
+            BindingOperations.CollectionRegistering += BindingOperations_CollectionRegistering;
+           
+        }
+
+        void BindingOperations_CollectionRegistering(object sender, CollectionRegisteringEventArgs e)
+        {
+            BindingOperations.EnableCollectionSynchronization(receivers, _receiversLock);
+        }
+        private object _receiversLock = new object();
 
         private ObservableCollection<receiver> _receivers = new ObservableCollection<receiver>();
         public ObservableCollection<receiver> receivers
@@ -99,71 +114,73 @@ namespace fakehermes
             client.Client.IOControl(SIO_UDP_CONNRESET, inValue, outValue);
 
             client.BeginReceive(new AsyncCallback(incomming), null);
-
-            timer.Interval = TimeSpan.FromMilliseconds(10);
-            timer.Tick += new EventHandler(timer_Tick);
-            timer.Start();
+       
+            handleCommsThread = new Thread(handleComms);
+            handleCommsThread.IsBackground = true; 
+            handleCommsThread.Start();
        
         }
 
         long actualPacketCount = 0;
-        void timer_Tick(object sender, EventArgs e)
+        void handleComms()
         {
-            //deal with any udp packets in main thread
-            while(!msgQueue.IsEmpty)
+            while (true)
             {
-                receivedPacket packet;
-                if(msgQueue.TryDequeue(out packet)) handlePacket(packet);    
-            }
-            //send any output
-            if (running)
-            {
-                adc1clip = false;
-                int channels = receivers.Count();
-                int stride = channels * 6 + 2;
-                int nSamples = (512 - 8) / stride;
-                double timeStep = 1.0 / bandwidth;
-
-
-                //calculate number of packets to maintain sync
-                DateTime now = DateTime.Now;
-                long totalTime = (long)(now - startTime).TotalMilliseconds;
-                long nPacketsCalculated = bandwidth / (nSamples * 2) * totalTime / 1000;
-
-                long packetsToSend = nPacketsCalculated - actualPacketCount;
-
-                databuf[0] = 0xef;
-                databuf[1] = 0xfe;
-                databuf[2] = 0x01;
-
-                databuf[3] = 0x06;
-
-                for (int i = 0; i < packetsToSend; i++)
+                while (!msgQueue.IsEmpty)
                 {
-                    databuf[4] = (byte)(seqNo >> 24);
-                    databuf[5] = (byte)((seqNo >> 16) & 0xff);
-                    databuf[6] = (byte)((seqNo >> 8) & 0xff);
-                    databuf[7] = (byte)(seqNo & 0xff);
-
-                    int bufStart = 8;
-                    for (int block = 0; block < 2; block++)
-                    {
-                        for (int c = 0; c < channels; c++)
-                        {
-                            GenerateSignal(databuf, bufStart + 8 + c * 6, stride, nSamples, timebase, timeStep, receivers[c]);
-                        }
-                        GenerateComandControl(databuf, bufStart, 0);
-                        timebase += nSamples * timeStep;
-                        bufStart += 512;
-                    }
-                    
-                    client.Send(databuf, databuf.Length, ClientIpEndPoint);
-                    seqNo++;
-                    actualPacketCount++;
-                    packetsSent++;
+                    receivedPacket packet;
+                    if (msgQueue.TryDequeue(out packet)) handlePacket(packet);
                 }
+                //send any output
+                if (running)
+                {
+                    adc1clip = false;
+                    int channels = receivers.Count();
+                    int stride = channels * 6 + 2;
+                    int nSamples = (512 - 8) / stride;
+                    double timeStep = 1.0 / bandwidth;
+
+
+                    //calculate number of packets to maintain sync
+                    DateTime now = DateTime.Now;
+                    long totalTime = (long)(now - startTime).TotalMilliseconds;
+                    long nPacketsCalculated = bandwidth / (nSamples * 2) * totalTime / 1000;
+
+                    long packetsToSend = nPacketsCalculated - actualPacketCount;
+
+                    databuf[0] = 0xef;
+                    databuf[1] = 0xfe;
+                    databuf[2] = 0x01;
+
+                    databuf[3] = 0x06;
+
+                    for (int i = 0; i < packetsToSend; i++)
+                    {
+                        databuf[4] = (byte)(seqNo >> 24);
+                        databuf[5] = (byte)((seqNo >> 16) & 0xff);
+                        databuf[6] = (byte)((seqNo >> 8) & 0xff);
+                        databuf[7] = (byte)(seqNo & 0xff);
+
+                        int bufStart = 8;
+                        for (int block = 0; block < 2; block++)
+                        {
+                            for (int c = 0; c < channels; c++)
+                            {
+                                GenerateSignal(databuf, bufStart + 8 + c * 6, stride, nSamples, timebase, timeStep, receivers[c]);
+                            }
+                            GenerateComandControl(databuf, bufStart, 0);
+                            timebase += nSamples * timeStep;
+                            bufStart += 512;
+                        }
+
+                        client.Send(databuf, databuf.Length, ClientIpEndPoint);
+                        seqNo++;
+                        actualPacketCount++;
+                        packetsSent++;
+                    }
+                }
+                Thread.Sleep(5);
             }
-            
         }
         void GenerateComandControl(byte[] databuf, int startOffset, int seq)
         {
@@ -181,33 +198,29 @@ namespace fakehermes
         }
         void GenerateSignal(byte[] outputbuf, int startOffset, int stride, int nSamples, double timebase,double timestep,receiver rx)
         {
-            //todo handle multiple generators automatically
-
-            int f1 = rx.vfo-rx.generators[0].frequency;
-            int f2 = rx.vfo-rx.generators[1].frequency;
+            double[] mixbuf = new double[nSamples * 2];//auto cleared to 0
+            // combine all signal generatiors
+            rx.GenerateSignal(mixbuf, nSamples, timebase, timestep);
+            //convert to formatted 24 bit
+            int idx = 0;
             for (int i = 0; i < nSamples * stride; i += stride)
             {
-                double angle1=f1 * 2 * Math.PI * timebase;
-                double angle2=f2 * 2 * Math.PI * timebase;
-                    
-                double amp = Math.Round(Math.Sin(angle1) * rx.generators[0].damplitude + Math.Sin(angle2) * rx.generators[1].damplitude);
-                int iamp = (int)amp;
-                if(iamp>max24int)
+                int iamp = (int)Math.Round(mixbuf[idx++]*0x7fffff);
+                if (iamp > max24int)
                 {
                     iamp = max24int;
                     adc1clip = true;
                 }
-                else if(iamp<min24int)
+                else if (iamp < min24int)
                 {
                     iamp = min24int;
                     adc1clip = true;
                 }
                 databuf[startOffset + i] = (byte)(iamp >> 16);
                 databuf[startOffset + i + 1] = (byte)((iamp >> 8) & 0xff);
-                databuf[startOffset + i + 2] = (byte)((iamp ) & 0xff);
-                    
-                amp = Math.Round(-Math.Cos(angle1) * rx.generators[0].damplitude -Math.Cos(angle2) * rx.generators[1].damplitude);
-                iamp = (int)amp;
+                databuf[startOffset + i + 2] = (byte)((iamp) & 0xff);
+
+                iamp = (int)Math.Round(mixbuf[idx++]*0x7fffff);
 
                 if (iamp > max24int)
                 {
@@ -219,14 +232,13 @@ namespace fakehermes
                     iamp = min24int;
                     adc1clip = true;
                 }
-                    
+
                 databuf[startOffset + i + 3] = (byte)(iamp >> 16);
                 databuf[startOffset + i + 4] = (byte)((iamp >> 8) & 0xff);
                 databuf[startOffset + i + 5] = (byte)(iamp & 0xff);
-
-                timebase += timestep;
-                
             }
+           timebase += nSamples*timestep;
+                
         }
         private void incomming(IAsyncResult res)
         {
@@ -332,8 +344,15 @@ namespace fakehermes
                     int nReceivers = ((c4 >> 3) & 0x07) + 1;
                     if(nReceivers!=receivers.Count)
                     {
-                        while (receivers.Count > nReceivers) receivers.Remove(receivers.Last());
-                        while (receivers.Count < nReceivers) receivers.Add(new receiver("RX" + (receivers.Count+1)));
+                        lock (_receiversLock)
+                        {
+                            while (receivers.Count > nReceivers) receivers.Remove(receivers.Last());
+                            while (receivers.Count < nReceivers) receivers.Add(new receiver("RX" + (receivers.Count + 1)));
+                        }
+                    //    while (receivers.Count > nReceivers) receivers.DoOperation(currentItems => currentItems.Remove(currentItems.Last()));
+                    //    while (receivers.Count < nReceivers) receivers.DoOperation(currentItems => currentItems.Add(new receiver("RX" + (currentItems.Count + 1))));
+
+                        
                         resetTransmission();    
                     }
                     break;
@@ -342,8 +361,8 @@ namespace fakehermes
                         if (!duplex)
                         {
                             receivers[0].vfo = txNCO;
-                            if (receivers[0].generators[0].frequency == 0) receivers[0].generators[0].frequency = receivers[0].vfo;
-                            if (receivers[0].generators[1].frequency == 0) receivers[0].generators[1].frequency = receivers[0].vfo + 10000;
+                            receivers[0].generators[0].SetDefaults( receivers[0].vfo);
+                            receivers[0].generators[1].SetDefaults( receivers[0].vfo + 10000);
                   
                         }
                     break;
@@ -357,8 +376,8 @@ namespace fakehermes
                     if (receivers != null && receivers.Count > rxIdx)
                     {
                         receivers[rxIdx].vfo = (((int)c1) << 24) + (((int)c2) << 16) + (((int)c3) << 8) + (int)c4;
-                        if (receivers[rxIdx].generators[0].frequency == 0) receivers[rxIdx].generators[0].frequency = receivers[rxIdx].vfo;
-                        if (receivers[rxIdx].generators[1].frequency == 0) receivers[rxIdx].generators[1].frequency = receivers[rxIdx].vfo+10000;
+                        receivers[0].generators[0].SetDefaults(receivers[0].vfo);
+                        receivers[0].generators[1].SetDefaults(receivers[0].vfo + 10000);
                     }
                     break;
             //    default: Console.WriteLine(string.Format("Unhandled Control message {0}\t{1}\t{2}\t{3}\t{4}", c0, c1, c2, c3, c4)); break;
@@ -367,58 +386,8 @@ namespace fakehermes
         }
         
     }
-    public class receiver : BindableBase
-    {
-        public receiver(string name)
-        {
-            this.name = name;
-            generators.Add(new sineWave());
-            generators.Add(new sineWave());
-        }
-        private int _vfo;
-        public int vfo 
-        {
-            get{ return _vfo;}
-            set { SetProperty(ref _vfo, value); } 
-        }
-        private string _name;
-        public string name
-        {
-            get { return _name; }
-            set { SetProperty(ref _name, value); }
-        }
-        ObservableCollection<sineWave> _generators =new ObservableCollection<sineWave>();
-        public ObservableCollection<sineWave> generators
-        {
-            get { return _generators; }
-            set { SetProperty(ref _generators, value); }
-        }
-    }
-    public class sineWave : BindableBase
-    {
-        public sineWave()
-        {
-            amplitude = -10;
-        }
-        private int _frequency=0;
-        public double damplitude = 0.0;
-        public int frequency
-        {
-            get { return _frequency; }
-            set { SetProperty(ref _frequency, value); }
-        }
-        private int _amplitude=0;
-        public int amplitude
-        {
-            get { return _amplitude; }
-            set 
-            {
-                damplitude = 0x7fffff / Math.Pow(Math.Sqrt(10), -(double)value / 10);
-                SetProperty(ref _amplitude, value); 
-            }
-        }
-            
-    }
+    
+    
     public class receivedPacket
     {
         public IPEndPoint endPoint { get; set; }

@@ -4,7 +4,7 @@
 ## Introduction
 
 This software emulates a HPSDR Hermes transceiver.
-It simply generates a couple of adjustable sine wave signals for each enabled receiver.
+It adds together a user selectable number of sine wave signals and recorded .wav IQ files for each enabled receiver.
 It will generate signals for as many receivers as the client requests.
 Currently only the command and control messages needed for signal generation are emulated. 
 
