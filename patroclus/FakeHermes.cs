@@ -349,10 +349,7 @@ namespace patroclus
                             while (receivers.Count > nReceivers) receivers.Remove(receivers.Last());
                             while (receivers.Count < nReceivers) receivers.Add(new receiver("RX" + (receivers.Count + 1)));
                         }
-                    //    while (receivers.Count > nReceivers) receivers.DoOperation(currentItems => currentItems.Remove(currentItems.Last()));
-                    //    while (receivers.Count < nReceivers) receivers.DoOperation(currentItems => currentItems.Add(new receiver("RX" + (currentItems.Count + 1))));
-
-                        
+                                           
                         resetTransmission();    
                     }
                     break;
@@ -376,8 +373,8 @@ namespace patroclus
                     if (receivers != null && receivers.Count > rxIdx)
                     {
                         receivers[rxIdx].vfo = (((int)c1) << 24) + (((int)c2) << 16) + (((int)c3) << 8) + (int)c4;
-                        receivers[0].generators[0].SetDefaults(receivers[0].vfo);
-                        receivers[0].generators[1].SetDefaults(receivers[0].vfo + 10000);
+                        receivers[rxIdx].generators[0].SetDefaults(receivers[rxIdx].vfo);
+                        receivers[rxIdx].generators[1].SetDefaults(receivers[rxIdx].vfo + 10000);
                     }
                     break;
             //    default: Console.WriteLine(string.Format("Unhandled Control message {0}\t{1}\t{2}\t{3}\t{4}", c0, c1, c2, c3, c4)); break;

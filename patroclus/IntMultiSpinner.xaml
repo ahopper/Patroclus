@@ -11,7 +11,7 @@
         <l:ColToMarginConverter x:Key="ColToMarginConverter" />
     </UserControl.Resources>
     <Grid x:Name="LayoutRoot" >
-        <Border BorderThickness="1" BorderBrush="Black"></Border>
+        <Border BorderThickness="1" BorderBrush="LightGray"></Border>
         <ItemsControl ItemsSource="{Binding Path=columns}" x:Name="tbContainer">
             <ItemsControl.ItemsPanel>
                 <ItemsPanelTemplate>

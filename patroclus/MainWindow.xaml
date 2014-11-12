@@ -2,31 +2,49 @@
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:local="clr-namespace:patroclus"
-        Title="Patroclus - Software Defined Radio Emulator" Height="350" Width="570">
+        Title="Patroclus - Software Defined Radio Emulator" Height="350" Width="578">
+    <Window.Resources>
+        <Style x:Key="TransparentStyle" TargetType="{x:Type Button}">
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border Background="Transparent">
+                            <ContentPresenter/>
+                        </Border>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+        <Style x:Key="LabelStyle" TargetType="{x:Type Label}">
+            <Setter Property="FontWeight" Value="Light">
+            </Setter>
+        </Style>
+    </Window.Resources>
     <Grid>
         <DockPanel >
             <StackPanel DockPanel.Dock="Top">
                 <Label Content="Radio: hpsdr Hermes" />
-                <Grid>
+                <Grid Background="AliceBlue">
                     <StackPanel Orientation="Vertical">
                         <StackPanel Orientation="Horizontal">
-                            <Label Content="Bandwidth" HorizontalAlignment="Left"  VerticalAlignment="Top"/>
+                            <Label Content="Bandwidth" Style="{StaticResource LabelStyle}" HorizontalAlignment="Left"  VerticalAlignment="Top"/>
                             <Label Content="{Binding Path=bandwidth}" HorizontalAlignment="Left"  VerticalAlignment="Top" />
-                            <Label Content="Status" HorizontalAlignment="Left"  VerticalAlignment="Top" />
+                            <Label Content="Status" Style="{StaticResource LabelStyle}" HorizontalAlignment="Left"  VerticalAlignment="Top" />
                             <Label Content="{Binding Path=status}" HorizontalAlignment="Left"  VerticalAlignment="Top" />
 
-                            <Label Content="UDP packets - sent" HorizontalAlignment="Left"  VerticalAlignment="Top" />
+                            <Label Content="UDP packets - sent" Style="{StaticResource LabelStyle}" HorizontalAlignment="Left"  VerticalAlignment="Top" />
 
                             <Label Content="{Binding Path=packetsSent}" HorizontalAlignment="Left"  VerticalAlignment="Top" />
-                            <Label Content="received" HorizontalAlignment="Left"  VerticalAlignment="Top" />
+                            <Label Content="received" Style="{StaticResource LabelStyle}" HorizontalAlignment="Left"  VerticalAlignment="Top" />
 
                             <Label Content="{Binding Path=packetsReceived}" HorizontalAlignment="Left"  VerticalAlignment="Top" />
                         </StackPanel>
                         <StackPanel Orientation="Horizontal">
-                            <Label Content="TX1 VFO Hz" HorizontalAlignment="Left"  VerticalAlignment="Top" />
+                            <Label Content="TX1" HorizontalAlignment="Left"  VerticalAlignment="Top" FontWeight="Bold" />
+                            <Label Content="VFO Hz" Style="{StaticResource LabelStyle}" HorizontalAlignment="Left"  VerticalAlignment="Top" />
 
                             <Label Content="{Binding Path=txNCO}" ContentStringFormat="### ### ###" HorizontalAlignment="Left"  VerticalAlignment="Top" />
-                            <Label Content="Duplex" HorizontalAlignment="Left"  VerticalAlignment="Top" />
+                            <Label Content="Duplex" Style="{StaticResource LabelStyle}" HorizontalAlignment="Left"  VerticalAlignment="Top" />
 
                             <Label Content="{Binding Path=duplex}" HorizontalAlignment="Left"  VerticalAlignment="Top" />
 
@@ -34,63 +52,77 @@
                     </StackPanel>
                 </Grid>
             </StackPanel>
-            <ListBox  ItemsSource="{Binding Path=receivers}" HorizontalAlignment="Left"  Margin="6,6,0,0" VerticalAlignment="Top" >
-                <ListBox.ItemTemplate>
+            <ScrollViewer>
+            <ItemsControl  ItemsSource="{Binding Path=receivers}" HorizontalAlignment="Left"  Margin="0,1,0,0" VerticalAlignment="Top" >
+                <ItemsControl.ItemsPanel>
+                    <ItemsPanelTemplate>
+                        <StackPanel Orientation="Vertical" Margin="0,1,0,1"  />
+                    </ItemsPanelTemplate>
+                </ItemsControl.ItemsPanel>
+                <ItemsControl.ItemTemplate>
                     <DataTemplate>
-                        <StackPanel Orientation="Horizontal">
-                            <Label Content="{Binding Path=name}" HorizontalAlignment="Left"  VerticalAlignment="Top" />
-                            <Label Content="VFO Hz" HorizontalAlignment="Left"  VerticalAlignment="Top" />
+                        <StackPanel Orientation="Horizontal" Background="AliceBlue" Margin="1,1,1,1">
+                            <Label Content="{Binding Path=name}" HorizontalAlignment="Left"  VerticalAlignment="Top" FontWeight="Bold" />
+                                <Label Content="VFO Hz" Style="{StaticResource LabelStyle}" HorizontalAlignment="Left"  VerticalAlignment="Top" />
                             <Label Content="{Binding Path=vfo}" ContentStringFormat="### ### ###" HorizontalAlignment="Left"  VerticalAlignment="Top" Width="80"/>
-                            <Button VerticalAlignment="Top" ToolTip="Add sine wave generator" Command="{Binding AddSineCommand}">+</Button>
-                            <Button VerticalAlignment="Top" ToolTip="Add wav file generator" Command="{Binding AddWavCommand}">+</Button>
+                                <Button Style="{StaticResource TransparentStyle}" VerticalAlignment="Top" ToolTip="Add sine wave generator" Command="{Binding AddSineCommand}">
+                                    <TextBlock FontFamily="Segoe UI Symbol" Text="&#xe189;"></TextBlock></Button>
+                                <Button Style="{StaticResource TransparentStyle}" Margin="4,0,2,0" VerticalAlignment="Top" ToolTip="Add wav file generator" Command="{Binding AddWavCommand}">
+                                    <TextBlock FontFamily="Segoe UI Symbol" Text="&#x1f4bf;"></TextBlock>
+                                </Button>
 
-                            <ListBox ItemsSource="{Binding Path=generators}" HorizontalAlignment="Left" VerticalAlignment="Top" >
-                                <ListBox.ItemTemplate>
+                            <ItemsControl ItemsSource="{Binding Path=generators}" HorizontalAlignment="Left" VerticalAlignment="Top" >
+                                <ItemsControl.ItemsPanel>
+                                    <ItemsPanelTemplate>
+                                        <StackPanel Orientation="Vertical" Background="White" />
+                                    </ItemsPanelTemplate>
+                                </ItemsControl.ItemsPanel>
+                                <ItemsControl.ItemTemplate>
                                     <DataTemplate>
                                         <ContentControl Content="{Binding}">
                                             <ContentControl.Resources>
                                                 <DataTemplate DataType="{x:Type local:WavFileGenerator}">
-                                                    <StackPanel Orientation="Vertical">
-                                                    <StackPanel Orientation="Horizontal">
-                                                        
-                                                        <Label Content="Wav File" HorizontalAlignment="Left"  VerticalAlignment="Top" />
-                                                        <Button Command="{Binding SelectFileCommand}">Select File</Button>
-                                                        <Label Content="Amplitude" HorizontalAlignment="Left"  VerticalAlignment="Top" />
-                                                        <Slider  Width="100" Orientation="Horizontal" HorizontalAlignment="Left" 
+                                                    <StackPanel Orientation="Horizontal" Background="AliceBlue" Margin="1,1,1,1">
+                                                            <Label Content="Amplitude" HorizontalAlignment="Left"  VerticalAlignment="Top" />
+                                                            <Slider  Width="100" Orientation="Horizontal" HorizontalAlignment="Left" 
                                         Value="{Binding Path=amplitude, Mode=TwoWay}" Minimum="-150" Maximum="0" 
                                         SmallChange="1" LargeChange="10"
                                         TickPlacement="BottomRight" TickFrequency="10" />
-                                                        <Label Content="{Binding Path=amplitude}" HorizontalAlignment="Left"  VerticalAlignment="Top" ContentStringFormat="0db" />
+                                                            <Label Content="{Binding Path=amplitude}" HorizontalAlignment="Left"  VerticalAlignment="Top" ContentStringFormat="0db" MinWidth="50" />
 
+                                                            <Label Content="Wav File" ToolTip="{Binding Path=filename}" HorizontalAlignment="Left"  VerticalAlignment="Top" />
+                                                            <Button  Style="{StaticResource TransparentStyle}"  Command="{Binding SelectFileCommand}" ToolTip="Open .wav File" VerticalAlignment="Center" >
+                                                                <TextBlock FontFamily="Segoe UI Symbol" Text="&#xe1c1;"></TextBlock>
+                                                            </Button>
+                                        
                                                     </StackPanel>
-                                                        <TextBox Text="{Binding Path=filename, Mode=TwoWay}"></TextBox>
-
-                                                    </StackPanel>
+                                                        
                                                 </DataTemplate>
                                                 <DataTemplate DataType="{x:Type local:SineWaveGenerator}">
-                                                    <StackPanel Orientation="Horizontal">
-                                                        <Label Content="Freq Hz" HorizontalAlignment="Left"  VerticalAlignment="Top" />
-                                                        <local:IntMultiSpinner MaxValue="99999999" MinValue="0" Value="{Binding Path=frequency, Mode=TwoWay}" />
+                                                    <StackPanel Orientation="Horizontal" Background="AliceBlue" Margin="1,1,1,1">
                                                         <Label Content="Amplitude" HorizontalAlignment="Left"  VerticalAlignment="Top" />
                                                         <Slider  Width="100" Orientation="Horizontal" HorizontalAlignment="Left" 
                                         Value="{Binding Path=amplitude, Mode=TwoWay}" Minimum="-150" Maximum="0" 
                                         SmallChange="1" LargeChange="10"
                                         TickPlacement="BottomRight" TickFrequency="10" />
-                                                        <Label Content="{Binding Path=amplitude}" HorizontalAlignment="Left"  VerticalAlignment="Top" ContentStringFormat="0db" />
-
+                                                            <Label Content="{Binding Path=amplitude}" HorizontalAlignment="Left"  VerticalAlignment="Top" ContentStringFormat="0db" MinWidth="50" />
+                                                        <Label Content="Freq Hz" HorizontalAlignment="Left"  VerticalAlignment="Top" />
+                                                        <local:IntMultiSpinner MaxValue="99999999" MinValue="0" Value="{Binding Path=frequency, Mode=TwoWay}" />
+                                                        
                                                     </StackPanel>
 
                                                 </DataTemplate>
                                             </ContentControl.Resources>
                                         </ContentControl>
                                     </DataTemplate>
-                                </ListBox.ItemTemplate>
-                            </ListBox>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
                         </StackPanel>
                     </DataTemplate>
-                </ListBox.ItemTemplate>
+                </ItemsControl.ItemTemplate>
 
-            </ListBox>
+            </ItemsControl>
+            </ScrollViewer>
         </DockPanel>
     </Grid>
 </Window>
