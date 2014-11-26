@@ -4,31 +4,49 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
              mc:Ignorable="d" 
+             xmlns:Custom="clr-namespace:MahApps.Metro.Controls;assembly=MahApps.Metro"
+
              xmlns:l="clr-namespace:patroclus"
              d:DesignHeight="40" d:DesignWidth="140">
     <UserControl.Resources>
         <l:MultiNumberToColumnConverter x:Key="numberToColConverter" />
         <l:ColToMarginConverter x:Key="ColToMarginConverter" />
+
+        <!-- reset some mahapps.metro styles -->
+        <Style x:Key="TextBoxStyle1" TargetType="{x:Type TextBox}">
+            <Setter Property="Custom:TextboxHelper.IsMonitoring" Value="False"/>
+            <Setter Property="SelectionBrush" Value="{DynamicResource HighlightBrush}"/>
+            <Setter Property="FontFamily" Value="{DynamicResource ContentFontFamily}"/>
+            <Setter Property="FontSize" Value="{DynamicResource ContentFontSize}"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="MinHeight" Value="0"/>
+            <Setter Property="Background" Value="{DynamicResource ControlBackgroundBrush}"/>
+            <Setter Property="Foreground" Value="{DynamicResource TextBrush}"/>
+            <Setter Property="Padding" Value="0"/>
+            <Setter Property="BorderBrush" Value="{DynamicResource TextBoxBorderBrush}"/>
+        </Style>
+
     </UserControl.Resources>
     <Grid x:Name="LayoutRoot" >
-        <Border BorderThickness="1" BorderBrush="LightGray"></Border>
+        <Border BorderThickness="1" BorderBrush="Black"></Border>
         <ItemsControl ItemsSource="{Binding Path=columns}" x:Name="tbContainer">
             <ItemsControl.ItemsPanel>
                 <ItemsPanelTemplate>
-                    <StackPanel Orientation="Horizontal" Margin="2,1,2,1"  />
+                    <StackPanel Orientation="Horizontal" Margin="2,1,2,1" />
                 </ItemsPanelTemplate>
             </ItemsControl.ItemsPanel>
             <ItemsControl.ItemTemplate>
                 <DataTemplate>
-                <TextBox 
+                <TextBox Padding="0"
                             MaxLength="1" 
                             MouseWheel="TextBox_MouseWheel" 
                             PreviewKeyDown="TextBox_PreviewKeyDown" 
                             GotFocus="TextBox_GotFocus" 
                             BorderThickness="0"
-                            Padding="0,2,0,2"
                             IsTabStop="{Binding Path=first}"
-                            
+                            FontSize="{Binding Path=FontSize, RelativeSource={RelativeSource FindAncestor, 
+                                    AncestorType={x:Type l:IntMultiSpinner}}}"
+                         Style="{StaticResource TextBoxStyle1}"
                              >
                     <TextBox.Margin>
                             <MultiBinding Converter="{StaticResource ColToMarginConverter}" Mode="OneWay">

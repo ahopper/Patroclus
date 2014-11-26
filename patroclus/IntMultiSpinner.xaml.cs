@@ -31,7 +31,6 @@ namespace patroclus
 
         public IntMultiSpinner()
         {
-   //         this.DataContext = this;
             InitializeComponent();
             LayoutRoot.DataContext = this;
         }
