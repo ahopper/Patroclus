@@ -21,18 +21,70 @@ namespace patroclus
     /// </summary>
     public partial class MainWindow : MetroWindow
     {
-        public FakeHermes hermes { get; set; }
+        public FakeRadio radio { get; set; }
         public MainWindow()
         {
             InitializeComponent();
-            hermes = new FakeHermes();
-
+            loadHermes();
+        }
+        
+        private void loadHermes()
+        {
+            if (radio != null) radio.Stop();
+            var hermes = new FakeHermes();
+            
+            hermes.boardID = 1;
             hermes.port = 1024;
             hermes.start();
 
+            radio = hermes;
             DataContext = hermes;
-           
+        }
+        private void loadHermesLite()
+        {
+            if (radio != null) radio.Stop();
+            var hermes = new FakeHermes();
 
+            hermes.boardID = 6;
+            hermes.port = 1024;
+            hermes.start();
+
+            radio = hermes;
+            DataContext = hermes;
+        }
+        private void loadHermesNP()
+        {
+            if (radio != null) radio.Stop();
+            
+            var hermes = new FakeHermesNewProtocol();
+           
+            hermes.port = 1024;
+            hermes.start();
+
+            radio = hermes;
+            DataContext = hermes;
+        }
+
+        private void ComboBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            var cb = e.Source as ComboBox;
+            var radioName = cb.SelectedValue;
+            if (radioName != null)
+            {
+                switch (cb.SelectedValue.ToString())
+                {
+                    case "HPSDR Hermes": loadHermes(); break;
+                    case "HPSDR Hermes new protocol": loadHermesNP(); break;
+                    case "Hermes Lite": loadHermesLite(); break;
+
+                }
+            }
+        }
+    }
+    public class FakeRadio : BindableBase
+    {
+        public virtual void Stop()
+        {
 
         }
     }

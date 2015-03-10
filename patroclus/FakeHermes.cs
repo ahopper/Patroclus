@@ -14,12 +14,13 @@ using System.Windows.Input;
 
 namespace patroclus
 {
-    public class FakeHermes : BindableBase
+    public class FakeHermes : FakeRadio
     {
         private UdpClient client;
         private Thread handleCommsThread;
 
         public int port { get; set; } //Port for the Client to use
+        public byte boardID { get; set; }
 
         ConcurrentQueue<receivedPacket> msgQueue = new ConcurrentQueue<receivedPacket>();
         
@@ -31,26 +32,54 @@ namespace patroclus
 
 
         byte[] databuf = new byte[1024 + 8];
+        byte[] databufBs = new byte[1024 + 8];
         uint seqNo = 0;
+        uint seqNoBs = 0;
+
+        int progSeqNo = 0;
         double timebase = 0.0;
         byte hermesCodeVersion = 30;
         DateTime startTime;
         bool running = false;
+        bool bsrunning = false;
 
+        
         private static int[] bandwidths={48000,96000,192000,384000};
 
         public FakeHermes()
         {
+          
             BindingOperations.CollectionRegistering += BindingOperations_CollectionRegistering;
            
+            for(int i=0;i<512;i++)
+            {
+                double v = (double)i / 10;
+                Int16 val =  (Int16)(Math.Sin(v) * 20000);
+                databufBs[8 + i * 2] = (byte)(val >> 8);
+                databufBs[9 + i * 2] = (byte)(val & 0xff);
+
+            }
+            
+                 
+
         }
 
         void BindingOperations_CollectionRegistering(object sender, CollectionRegisteringEventArgs e)
         {
-            BindingOperations.EnableCollectionSynchronization(receivers, _receiversLock);
+            if(e.Collection==receivers)BindingOperations.EnableCollectionSynchronization(receivers, _receiversLock);
+            else if(e.Collection==ccbits)BindingOperations.EnableCollectionSynchronization(ccbits, _ccbitsLock);
         }
-        private object _receiversLock = new object();
 
+
+        private object _ccbitsLock = new object();
+        private ObservableCollection<uint> _ccbits = new ObservableCollection<uint>(new List<uint>(){0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0});
+        public ObservableCollection<uint> ccbits
+        {
+            get { return _ccbits; }
+            set { SetProperty(ref _ccbits, value); }
+        }
+
+        private object _receiversLock = new object();
         private ObservableCollection<receiver> _receivers = new ObservableCollection<receiver>();
         public ObservableCollection<receiver> receivers
         {
@@ -120,7 +149,13 @@ namespace patroclus
             handleCommsThread.Start();
        
         }
-
+        public override void Stop()
+        {
+            handleCommsThread.Abort();
+            client.Close();
+            
+            base.Stop();
+        }
         long actualPacketCount = 0;
         void handleComms()
         {
@@ -179,8 +214,32 @@ namespace patroclus
                         packetsSent++;
                     }
                 }
+             //   long nBsPacketsCalculated = 48000 / 512 * totalTime / 1000;
+             //   uint BsPacketsToSend = ((uint)nBsPacketsCalculated) - seqNoBs;
+             //   for (int i = 0; i < BsPacketsToSend; i++)
+                   if(bsrunning) sendBandscope();
+
                 Thread.Sleep(5);
             }
+        }
+
+        void sendBandscope()
+        {
+            databufBs[0] = 0xef;
+            databufBs[1] = 0xfe;
+            databufBs[2] = 0x01;
+
+            databufBs[3] = 0x04;
+
+                    
+            databufBs[4] = (byte)(seqNoBs >> 24);
+            databufBs[5] = (byte)((seqNoBs >> 16) & 0xff);
+            databufBs[6] = (byte)((seqNoBs >> 8) & 0xff);
+            databufBs[7] = (byte)(seqNoBs & 0xff);
+
+            seqNoBs++;
+            client.Send(databufBs, databufBs.Length, ClientIpEndPoint);
+
         }
         void GenerateComandControl(byte[] databuf, int startOffset, int seq)
         {
@@ -284,9 +343,10 @@ namespace patroclus
                 response[8] = 0x01;
 
                 response[9] = hermesCodeVersion;//code version
-                response[10] = 0x01;//board type
+                response[10] = boardID;//board type
                 status = "Discovered";
                 seqNo = 1;
+                seqNoBs = 1;
                 client.Send(response, response.Length, packet.endPoint);
                 packetsSent++;
             }
@@ -302,12 +362,16 @@ namespace patroclus
                     
                     resetTransmission();    
                     running = true;
+                    if ((received[3] & 0x02) != 0) bsrunning = true;
+                    else bsrunning = false;
                     status = "Running";
                 }
                 else
                 {
                     running = false;
+                    bsrunning = false;
                     status = "Off";
+
                 }
             }
             else if (received[2] == 1 && received[3] == 2)
@@ -315,11 +379,51 @@ namespace patroclus
                 //standard data packet
                 handleCommandControl(received[11], received[12], received[13], received[14], received[15]);
                 handleCommandControl(received[512 + 11], received[512 + 12], received[512 + 13], received[512 + 14], received[512 + 15]);
-            }
-            else
-            {
 
+                handleTXIQandAudio(received, 16, 63);
+                handleTXIQandAudio(received, 512+16, 63);
             }
+            else if(received[2]==3)
+            {
+                if(received[3]==1)//program
+                {
+                    byte[] response = new byte[60];
+                    response[0] = 0xef;
+                    response[1] = 0xfe;
+                    response[2] = 0x04;
+                    response[3] = 0x00;
+                    response[4] = 0x00;
+                    response[5] = 0x00;
+                    response[6] = 0x00;
+                    response[7] = 0x00;
+                    response[8] = 0x01;
+
+                    status = "program " + progSeqNo++;
+                    Thread.Sleep(50);
+                    client.Send(response, response.Length, packet.endPoint);
+                    packetsSent++;
+                }
+                else if(received[3]==2)//erase
+                {
+                    byte[] response = new byte[60];
+                    response[0] = 0xef;
+                    response[1] = 0xfe;
+                    response[2] = 0x03;
+                    response[3] = 0x00;
+                    response[4] = 0x00;
+                    response[5] = 0x00;
+                    response[6] = 0x00;
+                    response[7] = 0x00;
+                    response[8] = 0x01;
+                    progSeqNo = 0;
+                    status = "erase";
+                    Thread.Sleep(1000);
+             
+                    client.Send(response, response.Length, packet.endPoint);
+                    packetsSent++;
+                }
+            }
+            else { }
 
         }
         void resetTransmission()
@@ -330,7 +434,10 @@ namespace patroclus
         public void handleCommandControl(byte c0,byte c1, byte c2, byte c3, byte c4)
         {
             //Console.WriteLine(string.Format("{0}\t{1}\t{2}\t{3}\t{4}", c0,c1,c2,c3,c4));
-                        
+
+            int index=c0 & 0xfe;
+            if (index < ccbits.Count) ccbits[index] = ((uint)c1 << 24) | ((uint)c2 << 16) | ((uint)c3 << 8) | (uint)c4;
+      
             switch(c0 & 0xfe)
             {
                 case 0:
@@ -381,7 +488,33 @@ namespace patroclus
 
             }
         }
-        
+        double[] txAudio;
+        int txAudioIdx = 0;
+        double[] txIQ;
+        int txIQIdx = 0;
+        public void  handleTXIQandAudio(byte[] received, int start, int length)
+        {
+            // L1 – Bits  15-8 of Left audio sample 
+            // L0 – Bits   7-0 of Left audio sample 
+            // R1 – Bits  15-8 of Right audio sample 
+            // R0 – Bits   7-0 of Right audio sample 
+            // I1 – Bits  15-8 of I sample 
+            // I0 – Bits   7-0 of I sample
+            // Q1 - Bits  15-8 of Q sample 
+            // Q0 - Bits   7-0 of Q sample
+            return;
+            for(int i=start;i<length*8+start;i+=8)
+            {
+                txAudio[txAudioIdx++] = (double)(short)((received[i] <<8) | (received[i + 1]));
+                txAudio[txAudioIdx++] = (double)(short)((received[i + 2] << 8) | (received[i + 3]));
+                txIQ[txIQIdx++] = (double)(short)((received[i + 4] << 8) | (received[i + 5]));
+                txIQ[txIQIdx++] = (double)(short)((received[i + 6] << 8) | (received[i + 7]));
+
+                if (txAudioIdx >= txAudio.Length) txAudioIdx = 0;
+                if (txIQIdx >= txIQ.Length) txIQIdx = 0;
+
+            }
+        }   
     }
     
     
