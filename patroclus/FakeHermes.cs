@@ -55,8 +55,8 @@ namespace patroclus
             {
                 double v = (double)i / 10;
                 Int16 val =  (Int16)(Math.Sin(v) * 20000);
-                databufBs[8 + i * 2] = (byte)(val >> 8);
-                databufBs[9 + i * 2] = (byte)(val & 0xff);
+                databufBs[9 + i * 2] = (byte)(val >> 8);
+                databufBs[8 + i * 2] = (byte)(val & 0xff);
 
             }
             
@@ -132,7 +132,18 @@ namespace patroclus
             get { return _packetsReceived; }
             set { SetProperty(ref _packetsReceived, value); }
         }
+        private int _clockError = 1000;
+        public int clockError
+        {
+            get { return _clockError; }
+            set 
+            {
+                //prevent system trying to correct timing from original start time
 
+                resetTransmission();
+                SetProperty(ref _clockError, value); 
+            }
+        }
         public void start()
         {
             client = new UdpClient(port);
@@ -179,7 +190,7 @@ namespace patroclus
                     //calculate number of packets to maintain sync
                     DateTime now = DateTime.Now;
                     long totalTime = (long)(now - startTime).TotalMilliseconds;
-                    long nPacketsCalculated = bandwidth / (nSamples * 2) * totalTime / 1000;
+                    long nPacketsCalculated = bandwidth / (nSamples * 2) * totalTime / clockError;
 
                     long packetsToSend = nPacketsCalculated - actualPacketCount;
 

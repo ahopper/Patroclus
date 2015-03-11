@@ -66,6 +66,9 @@
                             <Label Content="received" Style="{StaticResource LabelStyle}" HorizontalAlignment="Left"  VerticalAlignment="Top" />
 
                             <Label Content="{Binding Path=packetsReceived}" HorizontalAlignment="Left"  VerticalAlignment="Top" />
+
+                           
+
                         </StackPanel>
                         <StackPanel Orientation="Horizontal">
                             <Label Content="TX1" HorizontalAlignment="Left"  VerticalAlignment="Top" FontWeight="Bold" />
@@ -75,6 +78,11 @@
                             <Label Content="Duplex" Style="{StaticResource LabelStyle}" HorizontalAlignment="Left"  VerticalAlignment="Top" />
 
                             <Label Content="{Binding Path=duplex}" HorizontalAlignment="Left"  VerticalAlignment="Top" />
+                            <Label Content="Clock error" HorizontalAlignment="Left"  VerticalAlignment="Top" />
+                            <Slider  Width="100" Orientation="Horizontal" HorizontalAlignment="Left"  
+                                     Value="{Binding Path=clockError, Mode=TwoWay}" Minimum="900" Maximum="1100" 
+                                        SmallChange="1" LargeChange="10" AutoToolTipPlacement="BottomRight"
+                                        TickPlacement="BottomRight" TickFrequency="10" />
 
                         </StackPanel>
                     <!--    <local:scope x:Name="txscope" HorizontalAlignment="Stretch" Height="160"></local:scope>-->
