@@ -53,7 +53,7 @@ namespace patroclus
            
             for(int i=0;i<512;i++)
             {
-                double v = (double)i / 10;
+                double v = (double)i * Math.PI/16;
                 Int16 val =  (Int16)(Math.Sin(v) * 20000);
                 databufBs[9 + i * 2] = (byte)(val >> 8);
                 databufBs[8 + i * 2] = (byte)(val & 0xff);
@@ -446,7 +446,7 @@ namespace patroclus
         {
             //Console.WriteLine(string.Format("{0}\t{1}\t{2}\t{3}\t{4}", c0,c1,c2,c3,c4));
 
-            int index=c0 & 0xfe;
+            int index=c0>>1;
             if (index < ccbits.Count) ccbits[index] = ((uint)c1 << 24) | ((uint)c2 << 16) | ((uint)c3 << 8) | (uint)c4;
       
             switch(c0 & 0xfe)
