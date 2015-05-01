@@ -129,7 +129,7 @@
 
                                                             <Label Content="Wav File" ToolTip="{Binding Path=filename}" HorizontalAlignment="Left"  VerticalAlignment="Top" />
                                                             <Button  Style="{StaticResource TransparentStyle}"  Command="{Binding SelectFileCommand}" ToolTip="Open .wav File" VerticalAlignment="Center" >
-                                                                <TextBlock FontFamily="Segoe UI Symbol" Text="&#xe1c1;"></TextBlock>
+                                                                <TextBlock FontFamily="Segoe UI Symbol" Text="&#xe101;"></TextBlock>
                                                             </Button>
                                         
                                                     </StackPanel>
@@ -139,7 +139,7 @@
                                                     <StackPanel Orientation="Horizontal" Background="AliceBlue" Margin="1,1,1,1">
                                                         <Label Content="Amplitude" HorizontalAlignment="Left"  VerticalAlignment="Top" />
                                                         <Slider  Width="100" Orientation="Horizontal" HorizontalAlignment="Left" 
-                                        Value="{Binding Path=amplitude, Mode=TwoWay}" Minimum="-150" Maximum="0" 
+                                        Value="{Binding Path=amplitude, Mode=TwoWay}" Minimum="-200" Maximum="0" 
                                         SmallChange="1" LargeChange="10"
                                         TickPlacement="BottomRight" TickFrequency="10" />
                                                         <Label Content="{Binding Path=amplitude}" HorizontalAlignment="Left"  VerticalAlignment="Top" ContentStringFormat="0db" MinWidth="50" />

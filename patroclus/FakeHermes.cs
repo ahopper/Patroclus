@@ -42,6 +42,7 @@ namespace patroclus
         DateTime startTime;
         bool running = false;
         bool bsrunning = false;
+        volatile bool txing = false;
 
         
         private static int[] bandwidths={48000,96000,192000,384000};
@@ -51,17 +52,18 @@ namespace patroclus
           
             BindingOperations.CollectionRegistering += BindingOperations_CollectionRegistering;
            
+            // make sine wave that fits perfectly in 512 samples so it works for all bandscope lengths
+            // TODO make adjustable generator for this
             for(int i=0;i<512;i++)
             {
-                double v = (double)i * Math.PI/16;
-                Int16 val =  (Int16)(Math.Sin(v) * 20000);
+                double v = ((double)i) * Math.PI/2; 
+                Int16 val =  (Int16)Math.Round(Math.Sin(v) * 20000);
                 databufBs[9 + i * 2] = (byte)(val >> 8);
                 databufBs[8 + i * 2] = (byte)(val & 0xff);
-
+                
             }
-            
-                 
-
+            txIQ = new double[63 * 8 * 2];
+            txAudio = new double[63 * 8 * 2];
         }
 
         void BindingOperations_CollectionRegistering(object sender, CollectionRegisteringEventArgs e)
@@ -156,7 +158,8 @@ namespace patroclus
             client.BeginReceive(new AsyncCallback(incomming), null);
        
             handleCommsThread = new Thread(handleComms);
-            handleCommsThread.IsBackground = true; 
+            handleCommsThread.IsBackground = true;
+            handleCommsThread.Priority = ThreadPriority.AboveNormal;
             handleCommsThread.Start();
        
         }
@@ -190,7 +193,7 @@ namespace patroclus
                     //calculate number of packets to maintain sync
                     DateTime now = DateTime.Now;
                     long totalTime = (long)(now - startTime).TotalMilliseconds;
-                    long nPacketsCalculated = bandwidth / (nSamples * 2) * totalTime / clockError;
+                    long nPacketsCalculated = 1+bandwidth / (nSamples * 2) * totalTime / clockError;
 
                     long packetsToSend = nPacketsCalculated - actualPacketCount;
 
@@ -210,10 +213,35 @@ namespace patroclus
                         int bufStart = 8;
                         for (int block = 0; block < 2; block++)
                         {
-                            for (int c = 0; c < channels; c++)
+                            if (txing)
                             {
-                                GenerateSignal(databuf, bufStart + 8 + c * 6, stride, nSamples, timebase, timeStep, receivers[c]);
+                                //send back received iq samples
+                                int bidx=bufStart+8;
+                                for(int t=0;t<nSamples;t++)
+                                {
+                                    int txi = (int)txIQ[txIQReadIdx++];
+                                    int txq = (int)txIQ[txIQReadIdx++];
+                                    if (txIQReadIdx >= txIQ.Length) txIQReadIdx = 0;
+                                    for (int c = 0; c < channels; c++)
+                                    {
+                                        databuf[bidx++] = (byte)(txi >> 16);
+                                        databuf[bidx++] = (byte)((txi >> 8) & 0xff);
+                                        databuf[bidx++] = (byte)((txi) & 0xff);
+                                        databuf[bidx++] = (byte)(txq >> 16);
+                                        databuf[bidx++] = (byte)((txq >> 8) & 0xff);
+                                        databuf[bidx++] = (byte)((txq) & 0xff);
+                                    }
+                                    bidx += 2;
+                                }
                             }
+                            else
+                            {
+                                for (int c = 0; c < channels; c++)
+                                {
+                                    GenerateSignal(databuf, bufStart + 8 + c * 6, stride, nSamples, timebase, timeStep, receivers[c]);
+                                }
+                            }
+
                             GenerateComandControl(databuf, bufStart, 0);
                             timebase += nSamples * timeStep;
                             bufStart += 512;
@@ -230,7 +258,7 @@ namespace patroclus
              //   for (int i = 0; i < BsPacketsToSend; i++)
                    if(bsrunning) sendBandscope();
 
-                Thread.Sleep(5);
+                Thread.Sleep(1);
             }
         }
 
@@ -448,7 +476,7 @@ namespace patroclus
 
             int index=c0>>1;
             if (index < ccbits.Count) ccbits[index] = ((uint)c1 << 24) | ((uint)c2 << 16) | ((uint)c3 << 8) | (uint)c4;
-      
+            txing = ((c0 & 1) == 1);
             switch(c0 & 0xfe)
             {
                 case 0:
@@ -503,7 +531,8 @@ namespace patroclus
         int txAudioIdx = 0;
         double[] txIQ;
         int txIQIdx = 0;
-        public void  handleTXIQandAudio(byte[] received, int start, int length)
+        int txIQReadIdx = 0;
+        public void handleTXIQandAudio(byte[] received, int start, int length)
         {
             // L1 – Bits  15-8 of Left audio sample 
             // L0 – Bits   7-0 of Left audio sample 
@@ -513,7 +542,7 @@ namespace patroclus
             // I0 – Bits   7-0 of I sample
             // Q1 - Bits  15-8 of Q sample 
             // Q0 - Bits   7-0 of Q sample
-            return;
+            
             for(int i=start;i<length*8+start;i+=8)
             {
                 txAudio[txAudioIdx++] = (double)(short)((received[i] <<8) | (received[i + 1]));

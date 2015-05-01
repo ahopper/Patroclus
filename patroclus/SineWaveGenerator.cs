@@ -38,9 +38,12 @@ namespace patroclus
                 double angle1 = f1 * 2 * Math.PI * timebase;
                
                 //add to whatever else is already in buffer
-                outbuf[idx++] += Math.Sin(angle1) * damplitude;
-                outbuf[idx++] += -Math.Cos(angle1) * damplitude;
-
+                if (amplitude > -200)
+                {
+                    outbuf[idx++] += Math.Sin(angle1) * damplitude;
+                    outbuf[idx++] += -Math.Cos(angle1) * damplitude;
+                }
+                else idx += 2;
                 timebase += timestep;
             }
         }
