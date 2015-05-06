@@ -219,8 +219,8 @@ namespace patroclus
                                 int bidx=bufStart+8;
                                 for(int t=0;t<nSamples;t++)
                                 {
-                                    int txi = (int)txIQ[txIQReadIdx++];
-                                    int txq = (int)txIQ[txIQReadIdx++];
+                                    int txi = (int)txIQ[txIQReadIdx++]<<8;
+                                    int txq = (int)txIQ[txIQReadIdx++]<<8;
                                     if (txIQReadIdx >= txIQ.Length) txIQReadIdx = 0;
                                     for (int c = 0; c < channels; c++)
                                     {
