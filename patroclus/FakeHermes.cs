@@ -35,7 +35,8 @@ namespace patroclus
         byte[] databufBs = new byte[1024 + 8];
         uint seqNo = 0;
         uint seqNoBs = 0;
-
+        uint txseqNo = 0;
+  
         int progSeqNo = 0;
         double timebase = 0.0;
         byte hermesCodeVersion = 30;
@@ -62,7 +63,7 @@ namespace patroclus
                 databufBs[8 + i * 2] = (byte)(val & 0xff);
                 
             }
-            txIQ = new double[63 * 8 * 2];
+            txIQ = new double[63 * 32 * 2];
             txAudio = new double[63 * 8 * 2];
         }
 
@@ -133,6 +134,12 @@ namespace patroclus
         {
             get { return _packetsReceived; }
             set { SetProperty(ref _packetsReceived, value); }
+        }
+        private int _seqErrors = 0;
+        public int seqErrors
+        {
+            get { return _seqErrors; }
+            set { SetProperty(ref _seqErrors, value); }
         }
         private int _clockError = 1000;
         public int clockError
@@ -219,8 +226,8 @@ namespace patroclus
                                 int bidx=bufStart+8;
                                 for(int t=0;t<nSamples;t++)
                                 {
-                                    int txi = (int)txIQ[txIQReadIdx++]<<8;
                                     int txq = (int)txIQ[txIQReadIdx++]<<8;
+                                    int txi = -(int)txIQ[txIQReadIdx++]<<8;
                                     if (txIQReadIdx >= txIQ.Length) txIQReadIdx = 0;
                                     for (int c = 0; c < channels; c++)
                                     {
@@ -415,6 +422,13 @@ namespace patroclus
             }
             else if (received[2] == 1 && received[3] == 2)
             {
+                uint seq = ((uint)received[4] << 24) | ((uint)received[5] << 16) | ((uint)received[6] << 8) | ((uint)received[7]);
+                if(seq!=txseqNo+1)
+                {
+                    seqErrors++;
+                }
+                
+                txseqNo = seq;
                 //standard data packet
                 handleCommandControl(received[11], received[12], received[13], received[14], received[15]);
                 handleCommandControl(received[512 + 11], received[512 + 12], received[512 + 13], received[512 + 14], received[512 + 15]);
@@ -476,7 +490,14 @@ namespace patroclus
 
             int index=c0>>1;
             if (index < ccbits.Count) ccbits[index] = ((uint)c1 << 24) | ((uint)c2 << 16) | ((uint)c3 << 8) | (uint)c4;
-            txing = ((c0 & 1) == 1);
+            bool tx = ((c0 & 1) == 1);
+            if (tx != txing)
+            {
+                txing = tx;
+                int temptxIQReadIdx = txIQIdx - txIQ.Length / 2;
+                if (temptxIQReadIdx < 0) temptxIQReadIdx += txIQ.Length;
+                txIQReadIdx = temptxIQReadIdx;
+            }
             switch(c0 & 0xfe)
             {
                 case 0:
