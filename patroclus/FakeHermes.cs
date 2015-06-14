@@ -509,6 +509,10 @@ namespace patroclus
                     bandwidth = bw;
                     duplex = (c4 & 0x4) != 0;
                     int nReceivers = ((c4 >> 3) & 0x07) + 1;
+                    if(boardID==6)
+                    {
+                        nReceivers = ((c4 >> 3) & 0x1f) + 1;
+                    }
                     if(nReceivers!=receivers.Count)
                     {
                         lock (_receiversLock)
@@ -544,6 +548,48 @@ namespace patroclus
                         receivers[rxIdx].generators[1].SetDefaults(receivers[rxIdx].vfo + 10000);
                     }
                     break;
+// hermes lite experimental extra receivers
+                case 36:
+                case 38:
+                case 40:
+                case 42:
+                case 44:
+                case 46:
+                case 48:
+                case 50:
+                case 52:
+                case 54:
+                case 56:
+                case 58:
+                case 60:
+                case 62:
+                case 64:
+                case 66:
+                case 68:
+                case 70:
+                case 72:
+                case 74:
+                case 76:
+                case 78:
+                case 80:
+                case 82:
+                case 84:
+
+                    if (boardID == 6)
+                    {
+                        int rxIdx2 = (c0 >> 1) - 11;
+                        if (receivers != null && receivers.Count > rxIdx2)
+                        {
+                            receivers[rxIdx2].vfo = (((int)c1) << 24) + (((int)c2) << 16) + (((int)c3) << 8) + (int)c4;
+                            receivers[rxIdx2].generators[0].SetDefaults(receivers[rxIdx2].vfo);
+                            receivers[rxIdx2].generators[1].SetDefaults(receivers[rxIdx2].vfo + 10000);
+                        }
+                    }
+                    break;
+
+
+
+
             //    default: Console.WriteLine(string.Format("Unhandled Control message {0}\t{1}\t{2}\t{3}\t{4}", c0, c1, c2, c3, c4)); break;
 
             }
