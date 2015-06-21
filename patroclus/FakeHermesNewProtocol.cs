@@ -414,23 +414,25 @@ Bits - [0]Time stamp, [1]VITA-49, [2]VNA mode
 
             }
             //old style discovery
-            else if (received[0] == 0xef && received[1] == 0xfe && received[2] == 2)
+            else if (received[4] == 2)
             {
                 //discovery
                 byte[] response = new byte[60];
-                response[0] = 0xef;
-                response[1] = 0xfe;
-                response[2] = 0x02;
+                response[0] = 0x0;
+                response[1] = 0x0;
+                response[2] = 0x0; 
+                response[3] = 0x0; 
+                response[4] = 0x02;
                 //add mac address - kiss does not like blank one
-                response[3] = 0x00;
-                response[4] = 0x00;
                 response[5] = 0x00;
                 response[6] = 0x00;
                 response[7] = 0x00;
-                response[8] = 0x01;
+                response[8] = 0x00;
+                response[9] = 0x00;
+                response[10] = 0x01;
 
-                response[9] = hermesCodeVersion;//code version
-                response[10] = 0x01;//board type
+                response[11] = hermesCodeVersion;//code version
+                response[12] = 0x01;//board type
                 status = "Discovered";
                 seqNo = 1;
                 generalClient.Client.Send(response, response.Length, packet.endPoint);
@@ -438,15 +440,15 @@ Bits - [0]Time stamp, [1]VITA-49, [2]VNA mode
 
                 ClientIpEndPoint = packet.endPoint;
             }
-            else if (received[6] == 0)
+            else if (received[4] == 0)
             {
-                RxSpecificPort = (received[7] << 8) + received[8];
-                TxSpecificPort = (received[9] << 8) + received[10];
+                RxSpecificPort = (received[5] << 8) + received[6];
+                TxSpecificPort = (received[7] << 8) + received[8];
 
-                HighPriorityFromPCPort = (received[13] << 8) + received[14];
+                HighPriorityFromPCPort = (received[9] << 8) + received[10];
                 //   if (highPriorityToPC == null) highPriorityToPC = new UdpClient(HighPriorityToPCPort);
 
-                Rx0Port = (received[19] << 8) + received[20];
+                Rx0Port = (received[17] << 8) + received[18];
 
 
 
@@ -456,7 +458,7 @@ Bits - [0]Time stamp, [1]VITA-49, [2]VNA mode
         }
         private void handleRxSpecificPacket(receivedPacket packet)
         {
-            Console.Out.WriteLine("rxsp");
+     //     Console.Out.WriteLine("rxsp");
             int nReceivers = 0;
             byte[] received = packet.received;
 
