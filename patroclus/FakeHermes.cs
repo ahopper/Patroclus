@@ -3,6 +3,7 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
+using System.Diagnostics;
 using System.Linq;
 using System.Net;
 using System.Net.Sockets;
@@ -45,6 +46,7 @@ namespace patroclus
         bool bsrunning = false;
         volatile bool txing = false;
 
+        Stopwatch stopwatch = new Stopwatch();
         
         private static int[] bandwidths={48000,96000,192000,384000};
 
@@ -65,6 +67,7 @@ namespace patroclus
             }
             txIQ = new double[63 * 32 * 2];
             txAudio = new double[63 * 8 * 2];
+            stopwatch.Start();
         }
 
         void BindingOperations_CollectionRegistering(object sender, CollectionRegisteringEventArgs e)
@@ -363,7 +366,7 @@ namespace patroclus
                 client.BeginReceive(new AsyncCallback(incomming), null);
                 if (received != null)
                 {
-                    msgQueue.Enqueue(new receivedPacket() { received = received, endPoint = RemoteIpEndPoint });
+                    msgQueue.Enqueue(new receivedPacket() { received = received, endPoint = RemoteIpEndPoint, timeStamp = stopwatch.Elapsed });
                 }
             }
             catch (Exception )
@@ -411,6 +414,7 @@ namespace patroclus
                     if ((received[3] & 0x02) != 0) bsrunning = true;
                     else bsrunning = false;
                     status = "Running";
+       //             Console.WriteLine("Start "+packet.timeStamp.TotalMilliseconds);
                 }
                 else
                 {
@@ -430,6 +434,8 @@ namespace patroclus
                 
                 txseqNo = seq;
                 //standard data packet
+          //      Console.WriteLine(packet.timeStamp.TotalMilliseconds);
+
                 handleCommandControl(received[11], received[12], received[13], received[14], received[15]);
                 handleCommandControl(received[512 + 11], received[512 + 12], received[512 + 13], received[512 + 14], received[512 + 15]);
 
@@ -486,7 +492,8 @@ namespace patroclus
         }
         public void handleCommandControl(byte c0,byte c1, byte c2, byte c3, byte c4)
         {
-            //Console.WriteLine(string.Format("{0}\t{1}\t{2}\t{3}\t{4}", c0,c1,c2,c3,c4));
+
+       //     Console.WriteLine(string.Format("{0}\t{1}\t{2}\t{3}\t{4}", c0, c1, c2, c3, c4));
 
             int index=c0>>1;
             if (index < ccbits.Count) ccbits[index] = ((uint)c1 << 24) | ((uint)c2 << 16) | ((uint)c3 << 8) | (uint)c4;
@@ -627,6 +634,7 @@ namespace patroclus
     
     public class receivedPacket
     {
+        public TimeSpan timeStamp { get; set; }
         public IPEndPoint endPoint { get; set; }
         public byte[] received { get; set; }
     }

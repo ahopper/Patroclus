@@ -21,15 +21,31 @@ namespace patroclus
         const uint riffFact = 0x47361666;
         const uint riffData = 0x61746164;
         const uint riffJunk = 0x4b4e554a;
-
+        
+        UInt16 channels;
+        int sampleRate;
+        int bps;
+        UInt16 bps2;
+        UInt16 bitsPerSample;
+        BinaryReader reader = null;
+        
         private void loadWav(string filename)
         {
             // TODO read format data and do something with it
             byte[] twav = null;
             uint chunksize;
-            uint format;
-            using (BinaryReader reader = new BinaryReader(File.OpenRead(filename)))
+            UInt16 format;
+            int temp;
+            
+            if(reader!=null)
             {
+                reader.Close();
+                reader.Dispose();
+                reader = null;
+            }
+
+            reader = new BinaryReader(File.OpenRead(filename));
+            
                 try
                 {
                     while (twav == null)
@@ -38,14 +54,24 @@ namespace patroclus
                         {
                             case riffRiffHeader:
                                 chunksize = reader.ReadUInt32();
-                                format = reader.ReadUInt32();
+                                temp = reader.ReadInt32();
+                                break;
+                            case riffFormat:
+                                chunksize = reader.ReadUInt32();
+                                format = reader.ReadUInt16();
+                                channels=reader.ReadUInt16();
+                                sampleRate=reader.ReadInt32();
+                                bps=reader.ReadInt32();
+                                bps2 = reader.ReadUInt16();
+                                bitsPerSample = reader.ReadUInt16();
                                 break;
                             case riffData:
                                 chunksize = reader.ReadUInt32();
-                                twav = reader.ReadBytes((int)chunksize);
-                                pos = 0;
-                                wav = twav;
-                                break;
+                           //     twav = reader.ReadBytes((int)chunksize);
+                           //     pos = 0;
+                           //     wav = twav;
+                           //     break;
+                                return;
                             default:
                                 chunksize = reader.ReadUInt32();
                                 reader.BaseStream.Seek(chunksize, SeekOrigin.Current);
@@ -54,7 +80,7 @@ namespace patroclus
                     }
                 }
                 catch (EndOfStreamException) { }
-            }
+            
         }
         
         private byte[] wav;
@@ -101,7 +127,7 @@ namespace patroclus
             get { return _filename; }
             set 
             { 
-                if(File.Exists(value) && filename!=value)
+                if(File.Exists(value) )
                 {
                     //TODO make thread safe as generator could be running
                     loadWav(value);
@@ -111,19 +137,49 @@ namespace patroclus
         }
         public override void GenerateSignal(double[] outbuf, int nSamples, double timebase, double timestep, double vfo)
         {
-            if (wav == null) return;
-            int idx = 0;
-            while (idx < 2 * nSamples)
+         //   if (wav == null) return;
+            if (reader == null) return;
+            int len=nSamples*2 * bitsPerSample / 8;
+            if(wav==null || wav.Length!=len)
             {
-                if (pos >= wav.Length) pos = 0;
-                short val = (short)((wav[pos++] << 8) + wav[pos++]);
-                outbuf[idx++] += ((double)val)/32768 * damplitude; ;
-                
+                wav = new byte[len];
+            }
+            if(reader.Read(wav, 0, len)!=len)
+            {
+                loadWav(filename);
+            }
+            
+            pos=0;
+            int idx = 0;
+            switch(bitsPerSample)
+            { 
+                case 16:            
+                    while (idx < 2 * nSamples)
+                    {
+                  //      if (pos >= wav.Length) pos = 0;
+                        short val = (short)((wav[pos++] << 8) + wav[pos++]);
+                        outbuf[idx++] += ((double)val)/32768 * damplitude; 
+                    }
+                    break;
+                case 24:
+                    while (idx < 2 * nSamples)
+                    {
+                  //      if (pos >= wav.Length) pos = 0;
+                      //  int val = (int)((wav[pos++] << 24) | (wav[pos++] << 16) | (wav[pos++] << 8));
+                        int val = (int)((wav[pos++] << 8) | (wav[pos++] << 16) | (wav[pos++] << 24));
+                            
+                        outbuf[idx++] += ((double)val) / (32768*256) * damplitude; 
+                    }
+                    break;
             }
         }
         public override void SetDefaults(double vfo)
         {
             
+        }
+        ~WavFileGenerator()
+        {
+            if (reader != null) reader.Dispose();
         }
     }
 }
