@@ -24,6 +24,7 @@ namespace patroclus
         private udpConnection rxAudioClient;
 
         const int maxReceivers = 80;
+        private bool usePhaseWord = false;
 
         Dictionary<receiver, UdpClient> rxClients = new Dictionary<receiver, UdpClient>();
 
@@ -50,6 +51,7 @@ namespace patroclus
         DateTime startTime;
         bool running = false;
 
+        double clk = 122880000;
 
         private int _RxSpecificPort = 1025;
         public int RxSpecificPort
@@ -110,6 +112,18 @@ namespace patroclus
             get { return _WidebandADC0Port; }
             set { SetProperty(ref _WidebandADC0Port, value); }
         }
+        private int _clockError = 1000;
+        public int clockError
+        {
+            get { return _clockError; }
+            set
+            {
+                //prevent system trying to correct timing from original start time
+
+          //      resetTransmission();
+                SetProperty(ref _clockError, value);
+            }
+        }
         /*
 Wideband Enable [7:0]
 Wideband Samples per packet [15:8]
@@ -145,7 +159,7 @@ Bits - [0]Time stamp, [1]VITA-49, [2]VNA mode
             set { SetProperty(ref _receivers, value); }
         }
 
-        private int _bandwidth = 0;
+        private int _bandwidth = 192000;
         public int bandwidth
         {
             get { return _bandwidth; }
@@ -190,6 +204,7 @@ Bits - [0]Time stamp, [1]VITA-49, [2]VNA mode
             get { return _packetsReceived; }
             set { SetProperty(ref _packetsReceived, value); }
         }
+
 
         public void start()
         {
@@ -279,29 +294,34 @@ Bits - [0]Time stamp, [1]VITA-49, [2]VNA mode
                 //send any output
                 if (running)
                 {
-                    int samples = 240;
-
+                    
                     adc1clip = false;
                     int channels = receivers.Count();
-                    int nSamples = samples;
-                    double timeStep = 1.0 / bandwidth;
+                    int nSamples = 238;
 
-
-                    //calculate number of packets to maintain sync
                     DateTime now = DateTime.Now;
                     long totalTime = (long)(now - startTime).TotalMilliseconds;
-                    long nPacketsCalculated = bandwidth / (nSamples) * totalTime / 1000;
 
-                    long packetsToSend = nPacketsCalculated - actualPacketCount;
+                    double ttimebase = timebase;
 
-
-
-                    for (int i = 0; i < packetsToSend; i++)
+                    for (int ri = 0; ri < receivers.Count; ri++)
                     {
-                        for (int ri = 0; ri < receivers.Count; ri++)
+                        
+                        var rx = receivers[ri];
+                        
+                        double timeStep = 1.0 / rx.bandwidth;
+
+                        //calculate number of packets to maintain sync
+                        long nPacketsCalculated = rx.bandwidth / (nSamples) * totalTime / 1000;
+
+                        long packetsToSend = nPacketsCalculated - rx.packetCount;
+
+
+
+                        for (int i = 0; i < packetsToSend; i++)
                         {
-                            int seqNo = receivers[ri].seq;
-                            receivers[ri].seq++;
+                            int seqNo = rx.seq;
+                            rx.seq++;
                             //sequence no
                             databuf[0] = (byte)(seqNo >> 24);
                             databuf[1] = (byte)((seqNo >> 16) & 0xff);
@@ -316,29 +336,32 @@ Bits - [0]Time stamp, [1]VITA-49, [2]VNA mode
                                  databuf[9] = (byte)(seqNo & 0xff);
                                  databuf[10] = (byte)(seqNo & 0xff);
                                  databuf[11] = (byte)(seqNo & 0xff);
-                                 //no of samples
-                                 databuf[12] = (byte)(samples>>8);
-                                 databuf[13] = (byte)(samples & 0xff);
-                            */
-                            //samples
+                               */
+                            //bits per sample
+                            databuf[12] = (byte)(0);
+                            databuf[13] = (byte)(24);
 
+                            //no of samples
+                            databuf[14] = (byte)(nSamples >> 8);
+                            databuf[15] = (byte)(nSamples & 0xff);
+                                
 
-
-                            //    receivers[ri].GenerateSignal(databuf, 16, 6, samples, timebase, timeStep);
-                            receivers[ri].GenerateSignal(databuf, 4, 6, samples, timebase, timeStep);
-                            rxClients[receivers[ri]].Send(databuf, databuf.Length, ClientIpEndPoint);
-
+                            rx.GenerateSignal(databuf, 16, 6, nSamples, rx.timebase, timeStep);
+                            rxClients[rx].Send(databuf, databuf.Length, ClientIpEndPoint);
+                            rx.packetCount++;
+                            packetsSent++;
+                            rx.timebase += nSamples * timeStep;
                         }
 
                         //seqNo++;
-                        actualPacketCount++;
-                        packetsSent++;
-                        timebase += nSamples * timeStep;
+                        //actualPacketCount++;
+                         
                     }
+                //    timebase = ttimebase;
                     //  if (highPriorityToPC != null) 
                     sendHighPriorityToPC();
 
-                    long nMicPacketsCalculated = 48000 / 512 * totalTime / 1000;
+                    long nMicPacketsCalculated = 48000 / 720 * totalTime / 1000;
                     uint micPacketsToSend = ((uint)nMicPacketsCalculated) - micSeqNo;
                     for (int i = 0; i < micPacketsToSend; i++) sendMicData();
                 }
@@ -357,7 +380,9 @@ Bits - [0]Time stamp, [1]VITA-49, [2]VNA mode
             hpbuf[3] = (byte)(seqNo & 0xff);
 
             hpbuf[5] = adc1clip ? (byte)1 : (byte)0;
-            generalClient.Client.Send(hpbuf, hpbuf.Length, ClientIpEndPoint);
+
+
+            rxSpecificClient.Client.Send(hpbuf, hpbuf.Length, ClientIpEndPoint);
             seqNo++;
 
         }
@@ -420,8 +445,8 @@ Bits - [0]Time stamp, [1]VITA-49, [2]VNA mode
                 byte[] response = new byte[60];
                 response[0] = 0x0;
                 response[1] = 0x0;
-                response[2] = 0x0; 
-                response[3] = 0x0; 
+                response[2] = 0x0;
+                response[3] = 0x0;
                 response[4] = 0x02;
                 //add mac address - kiss does not like blank one
                 response[5] = 0x00;
@@ -431,14 +456,20 @@ Bits - [0]Time stamp, [1]VITA-49, [2]VNA mode
                 response[9] = 0x00;
                 response[10] = 0x01;
 
-                response[11] = hermesCodeVersion;//code version
-                response[12] = 0x01;//board type
+                response[11] = 0x01;//board type
+                response[12] = 23;//code version
+
+                response[20] = 7;
+                response[21] = 1;
+
                 status = "Discovered";
                 seqNo = 1;
                 generalClient.Client.Send(response, response.Length, packet.endPoint);
                 packetsSent++;
 
                 ClientIpEndPoint = packet.endPoint;
+
+                Console.WriteLine("disc");
             }
             else if (received[4] == 0)
             {
@@ -450,6 +481,10 @@ Bits - [0]Time stamp, [1]VITA-49, [2]VNA mode
 
                 Rx0Port = (received[17] << 8) + received[18];
 
+                //   usePhaseWord = (received[37] & 8) != 0;
+
+                usePhaseWord = true;
+                ClientIpEndPoint = packet.endPoint;
 
 
             }
@@ -458,7 +493,7 @@ Bits - [0]Time stamp, [1]VITA-49, [2]VNA mode
         }
         private void handleRxSpecificPacket(receivedPacket packet)
         {
-     //     Console.Out.WriteLine("rxsp");
+            //     Console.Out.WriteLine("rxsp");
             int nReceivers = 0;
             byte[] received = packet.received;
 
@@ -490,7 +525,10 @@ Bits - [0]Time stamp, [1]VITA-49, [2]VNA mode
                         {
                             lock (_receiversLock)
                             {
-                                receivers.Remove(receiversByIdx[idx]);
+                                var rx = receiversByIdx[idx];
+                                receivers.Remove(rx);
+                                rxClients[rx].Close();
+                                rxClients.Remove(rx);
                                 receiversByIdx[idx] = null;
                             }
                         }
@@ -507,18 +545,20 @@ Bits - [0]Time stamp, [1]VITA-49, [2]VNA mode
         }
         private void handleRXAudioPacket(receivedPacket packet)
         {
-            //   Console.Out.WriteLine("txsp");
+            //            Console.Out.WriteLine("rxap");
         }
         private void handleTxSpecificPacket(receivedPacket packet)
         {
-            //    Console.Out.WriteLine("txsp");
+            //              Console.Out.WriteLine("txsp");
         }
         private void handleTxIQPacket(receivedPacket packet, int adc)
         {
-            //    Console.Out.WriteLine("txiq");
+            //             Console.Out.WriteLine("txiq");
         }
         private void handleHighPriorityPacket(receivedPacket packet)
         {
+            //         Console.Out.WriteLine("hpp");
+
             byte[] received = packet.received;
             bool run = ((received[4] & 0x01) != 0);
             if (run != running)
@@ -545,22 +585,40 @@ Bits - [0]Time stamp, [1]VITA-49, [2]VNA mode
             {
                 if (receiversByIdx[i] != null)
                 {
-                    receiversByIdx[i].vfo = (((int)received[rxi]) << 24) + (((int)received[rxi + 1]) << 16) + (((int)received[rxi + 2]) << 8) + (int)received[rxi + 3];
+                    if (usePhaseWord)
+                    {
+                        //phase_word[31:0] = 2^32 * frequency(Hz)/DSP clock frequency (Hz) 
 
-                    receiversByIdx[i].generators[0].SetDefaults(receivers[i].vfo);
-                    receiversByIdx[i].generators[1].SetDefaults(receivers[i].vfo + 10000);
+                        int phaseword = (((int)received[rxi]) << 24) + (((int)received[rxi + 1]) << 16) + (((int)received[rxi + 2]) << 8) + (int)received[rxi + 3];
+
+                        receiversByIdx[i].vfo = (int)(phaseword * clk / 4294967296.0);
+                    }
+                    else receiversByIdx[i].vfo = (((int)received[rxi]) << 24) + (((int)received[rxi + 1]) << 16) + (((int)received[rxi + 2]) << 8) + (int)received[rxi + 3];
+
+                    receiversByIdx[i].generators[0].SetDefaults(receiversByIdx[i].vfo);
+                    receiversByIdx[i].generators[1].SetDefaults(receiversByIdx[i].vfo + 10000);
                 }
                 rxi += 4;
             }
             int txi = 329;
-            txNCO = (((int)received[txi]) << 24) + (((int)received[txi + 1]) << 16) + (((int)received[txi + 2]) << 8) + (int)received[txi + 3];
+            if (usePhaseWord)
+            {
+                int phaseword = (((int)received[txi]) << 24) + (((int)received[txi + 1]) << 16) + (((int)received[txi + 2]) << 8) + (int)received[txi + 3];
+                txNCO = (int)(phaseword * clk / 4294967296.0);
+            }
+            else txNCO = (((int)received[txi]) << 24) + (((int)received[txi + 1]) << 16) + (((int)received[txi + 2]) << 8) + (int)received[txi + 3];
         }
         void resetTransmission()
         {
             startTime = DateTime.Now;
             actualPacketCount = 0;
             micSeqNo = 0;
-            foreach (receiver rx in receivers) rx.seq = 0;
+            foreach (receiver rx in receivers)
+            {
+                rx.seq = 0;
+                rx.packetCount = 0;
+                rx.timebase = 0;
+            }
         }
     }
     public class udpConnection

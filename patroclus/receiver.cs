@@ -42,11 +42,17 @@ namespace patroclus
             get { return _seq; }
             set { SetProperty(ref _seq, value); }
         }
-        private int _packetCount = 0;
-        public int packetCount
+        private long _packetCount = 0;
+        public long packetCount
         {
             get { return _packetCount; }
             set { SetProperty(ref _packetCount, value); }
+        }
+        private double _timebase = 0;
+        public double timebase
+        {
+            get { return _timebase; }
+            set { SetProperty(ref _timebase, value); }
         }
         private int _bandwidth = 0;
         public int bandwidth

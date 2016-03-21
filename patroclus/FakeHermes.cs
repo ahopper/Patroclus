@@ -181,6 +181,7 @@ namespace patroclus
             base.Stop();
         }
         long actualPacketCount = 0;
+        int txReturnState = 0;
         void handleComms()
         {
             while (true)
@@ -225,13 +226,23 @@ namespace patroclus
                         {
                             if (txing)
                             {
-                                //send back received iq samples
+                                // send back received iq samples
+                                // really need to do something better
+                                // for bandwidths other than 48k
                                 int bidx=bufStart+8;
                                 for(int t=0;t<nSamples;t++)
                                 {
-                                    int txq = (int)txIQ[txIQReadIdx++]<<8;
-                                    int txi = -(int)txIQ[txIQReadIdx++]<<8;
-                                    if (txIQReadIdx >= txIQ.Length) txIQReadIdx = 0;
+                                    int txq = (int)txIQ[txIQReadIdx]<<8;
+                                    int txi = -(int)txIQ[txIQReadIdx+1]<<8;
+                                    txReturnState++;
+                                    if(txReturnState==bandwidth/48000)
+                                    {
+                                        txReturnState=0;
+                                        txIQReadIdx+=2;
+                                        if (txIQReadIdx >= txIQ.Length) txIQReadIdx = 0;
+                                    
+                                    }
+
                                     for (int c = 0; c < channels; c++)
                                     {
                                         databuf[bidx++] = (byte)(txi >> 16);
@@ -398,6 +409,7 @@ namespace patroclus
                 seqNoBs = 1;
                 client.Send(response, response.Length, packet.endPoint);
                 packetsSent++;
+
             }
             else if (received[2] == 4)
             {
