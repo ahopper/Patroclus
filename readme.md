@@ -23,7 +23,7 @@ It has been tested with the following sdr clients
 
   * [HDSDR](http://www.hdsdr.de/) using [ExtIO_hpsdr_msvc.dll](https://github.com/amontefusco/extio-hermes) - Same as SDR#
 
-  * Thetis r3538 - emulator has to run elsewhere on the network.
+  * Thetis V2.1.18 will run on same pc.
 
   * [Radio ?](http://www.ihopper.org/radio/) my client for [Hermes Lite](https://github.com/softerhardware/Hermes-Lite) - emulator will provide up to 32 receivers for hermes lite extended old protocol.
 
