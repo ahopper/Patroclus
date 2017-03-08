@@ -126,6 +126,13 @@ namespace patroclus
             get { return _status; }
             set { SetProperty(ref _status, value); }
         }
+        private string _log = "";
+        public string log
+        {
+            get { return _log; }
+            set { SetProperty(ref _log, value); }
+        }
+        
         private int _packetsSent = 0;
         public int packetsSent
         {
@@ -422,6 +429,7 @@ namespace patroclus
 
                 response[9] = hermesCodeVersion;//code version
                 response[10] = boardID;//board type
+                
                 status = "Discovered";
                 seqNo = 1;
                 seqNoBs = 1;
@@ -550,6 +558,7 @@ namespace patroclus
                     {
                         nReceivers = ((c4 >> 3) & 0x1f) + 1;
                     }
+                    
                     if(nReceivers!=receivers.Count)
                     {
                         lock (_receiversLock)
@@ -636,8 +645,8 @@ namespace patroclus
                     break;
 
                 case 86: break;
-                case 120: break;
-                case 122: break;
+                case 120: log += string.Format("I2C1 {0:x2} {1:x2} {2:x2} {3:x2} {4:x2}\r\n", c0, c1, c2, c3, c4); break;
+                case 122: log += string.Format("I2C2 {0:x2} {1:x2} {2:x2} {3:x2} {4:x2}\r\n", c0, c1, c2, c3, c4); break; 
 
 
                 default: Console.WriteLine(string.Format("Unhandled Control message {0}\t{1}\t{2}\t{3}\t{4}", c0, c1, c2, c3, c4)); break;

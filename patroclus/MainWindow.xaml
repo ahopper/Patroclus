@@ -4,7 +4,7 @@
         xmlns:local="clr-namespace:patroclus"
          xmlns:Controls="clr-namespace:MahApps.Metro.Controls;assembly=MahApps.Metro"
                      
-        Title="Patroclus - Software Defined Radio Emulator" Height="350" Width="578">
+        Title="Patroclus - Software Defined Radio Emulator" Height="400" Width="578">
     <Window.Resources>
         <Style x:Key="TransparentStyle" TargetType="{x:Type Button}">
             <Setter Property="Template">
@@ -49,7 +49,9 @@
                                 </DataTemplate>
                             </ItemsControl.ItemTemplate>
                         </ItemsControl>
-
+                        <TextBox ScrollViewer.HorizontalScrollBarVisibility="Disabled"
+                                ScrollViewer.VerticalScrollBarVisibility="Auto" 
+                                 IsReadOnly="True" Height="50" Text="{Binding log}" ></TextBox>
 
 
                         <StackPanel Orientation="Horizontal">
