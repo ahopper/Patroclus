@@ -52,6 +52,18 @@ namespace patroclus
             radio = hermes;
             DataContext = hermes;
         }
+        private void loadHermesLite2()
+        {
+            if (radio != null) radio.Stop();
+            var hermes = new FakeHermes();
+            
+            hermes.boardID = 7;
+            hermes.port = 1024;
+            hermes.start();
+
+            radio = hermes;
+            DataContext = hermes;
+        }
         private void loadHermesNP()
         {
             if (radio != null) radio.Stop();
@@ -76,6 +88,7 @@ namespace patroclus
                     case "HPSDR Hermes": loadHermes(); break;
                     case "HPSDR Hermes new protocol": loadHermesNP(); break;
                     case "Hermes Lite": loadHermesLite(); break;
+                    case "Hermes Lite 2": loadHermesLite2(); break;
 
                 }
             }

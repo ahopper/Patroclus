@@ -78,7 +78,7 @@ namespace patroclus
 
 
         private object _ccbitsLock = new object();
-        private ObservableCollection<uint> _ccbits = new ObservableCollection<uint>(new List<uint>(){0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0});
+        private ObservableCollection<uint> _ccbits = new ObservableCollection<uint>(new List<uint>() { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 });
         public ObservableCollection<uint> ccbits
         {
             get { return _ccbits; }
@@ -384,9 +384,27 @@ namespace patroclus
             {
             }
         }
+        System.IO.StreamWriter logf = null;
+        int logLen = 20;
+
         public void handlePacket(receivedPacket packet)
         {
             byte[] received = packet.received;
+
+            if (logLen > 0)
+            {
+                if(logf==null)logf=System.IO.File.CreateText("hllog.txt");
+
+                logf.Write(received.Length + ", ");
+                for (int i = 0; i < 16; i++) logf.Write(received[i] + ", ");
+                if (received.Length > 700) for (int i = 0; i < 5; i++) logf.Write(received[512 + 11+i] + ", ");
+
+                logf.Write("\r\n");
+
+                logLen--;
+                if (logLen == 0) logf.Dispose();
+            }
+
             if (received[2] == 2)
             {
                 //discovery
@@ -517,7 +535,7 @@ namespace patroclus
                 if (temptxIQReadIdx < 0) temptxIQReadIdx += txIQ.Length;
                 txIQReadIdx = temptxIQReadIdx;
             }
-            switch(c0 & 0xfe)
+            switch(c0 & 0x7e)
             {
                 case 0:
                     int bw = bandwidths[c1 & 0x03];
@@ -567,6 +585,17 @@ namespace patroclus
                         receivers[rxIdx].generators[1].SetDefaults(receivers[rxIdx].vfo + 10000);
                     }
                     break;
+                case 18:
+                case 20:
+                case 22:
+                case 24:
+                case 26:
+                case 28:
+                case 30:
+                case 32:
+                case 34:
+                    break;
+
 // hermes lite experimental extra receivers
                 case 36:
                 case 38:
@@ -606,10 +635,12 @@ namespace patroclus
                     }
                     break;
 
+                case 86: break;
+                case 120: break;
+                case 122: break;
 
 
-
-            //    default: Console.WriteLine(string.Format("Unhandled Control message {0}\t{1}\t{2}\t{3}\t{4}", c0, c1, c2, c3, c4)); break;
+                default: Console.WriteLine(string.Format("Unhandled Control message {0}\t{1}\t{2}\t{3}\t{4}", c0, c1, c2, c3, c4)); break;
 
             }
         }

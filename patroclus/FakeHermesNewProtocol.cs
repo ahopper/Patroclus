@@ -298,7 +298,7 @@ Bits - [0]Time stamp, [1]VITA-49, [2]VNA mode
                     adc1clip = false;
                     int channels = receivers.Count();
                     int nSamples = 238;
-
+                   
                     DateTime now = DateTime.Now;
                     long totalTime = (long)(now - startTime).TotalMilliseconds;
 
@@ -327,16 +327,18 @@ Bits - [0]Time stamp, [1]VITA-49, [2]VNA mode
                             databuf[1] = (byte)((seqNo >> 16) & 0xff);
                             databuf[2] = (byte)((seqNo >> 8) & 0xff);
                             databuf[3] = (byte)(seqNo & 0xff);
-                            /*     //timestamp
-                                 databuf[4] = (byte)(seqNo & 0xff);
-                                 databuf[5] = (byte)(seqNo & 0xff);
-                                 databuf[6] = (byte)(seqNo & 0xff);
-                                 databuf[7] = (byte)(seqNo & 0xff);
-                                 databuf[8] = (byte)(seqNo & 0xff);
-                                 databuf[9] = (byte)(seqNo & 0xff);
-                                 databuf[10] = (byte)(seqNo & 0xff);
-                                 databuf[11] = (byte)(seqNo & 0xff);
-                               */
+                            //timestamp
+                       /*     databuf[4] = (byte)(rx.timestamp>>56);
+                            databuf[5] = (byte)((rx.timestamp >> 48 ) & 0xff);
+                            databuf[6] = (byte)((rx.timestamp >> 40) & 0xff);
+                            databuf[7] = (byte)((rx.timestamp >> 32) & 0xff);
+                            databuf[8] = (byte)((rx.timestamp >> 24) & 0xff);
+                            databuf[9] = (byte)((rx.timestamp >> 16) & 0xff);
+                            databuf[10] = (byte)((rx.timestamp >> 8) & 0xff);
+                            databuf[11] = (byte)(rx.timestamp  & 0xff);
+                               
+                            rx.timestamp += (ulong)(clk * nSamples / rx.bandwidth);
+                            */
                             //bits per sample
                             databuf[12] = (byte)(0);
                             databuf[13] = (byte)(24);
@@ -344,8 +346,9 @@ Bits - [0]Time stamp, [1]VITA-49, [2]VNA mode
                             //no of samples
                             databuf[14] = (byte)(nSamples >> 8);
                             databuf[15] = (byte)(nSamples & 0xff);
-                                
 
+                            
+                          
                             rx.GenerateSignal(databuf, 16, 6, nSamples, rx.timebase, timeStep);
                             rxClients[rx].Send(databuf, databuf.Length, ClientIpEndPoint);
                             rx.packetCount++;
@@ -370,7 +373,7 @@ Bits - [0]Time stamp, [1]VITA-49, [2]VNA mode
                 Thread.Sleep(1);
             }
         }
-        byte[] hpbuf = new byte[55];
+        byte[] hpbuf = new byte[60];
 
         void sendHighPriorityToPC()
         {
@@ -456,7 +459,7 @@ Bits - [0]Time stamp, [1]VITA-49, [2]VNA mode
                 response[9] = 0x00;
                 response[10] = 0x01;
 
-                response[11] = 0x01;//board type
+                response[11] = 0x02;//board type
                 response[12] = 23;//code version
 
                 response[20] = 7;
@@ -542,6 +545,9 @@ Bits - [0]Time stamp, [1]VITA-49, [2]VNA mode
                     mask <<= 1;
                 }
             }
+            // find sync'd and multiplexed receivers
+         //   byte mux = received[1443];
+
         }
         private void handleRXAudioPacket(receivedPacket packet)
         {

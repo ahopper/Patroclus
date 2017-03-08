@@ -78,6 +78,14 @@ namespace patroclus
             get { return _sampleSize; }
             set { SetProperty(ref _sampleSize, value); }
         }
+
+        private ulong _timestamp =0;
+        public ulong timestamp
+        {
+            get { return _timestamp; }
+            set { SetProperty(ref _timestamp, value); }
+        }
+
         private bool _adcClip=false;
         public bool adcClip
         {

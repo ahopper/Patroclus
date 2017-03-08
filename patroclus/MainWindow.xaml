@@ -31,6 +31,7 @@
                          <ComboBoxItem IsSelected="True">HPSDR Hermes</ComboBoxItem>
                         <ComboBoxItem>HPSDR Hermes new protocol</ComboBoxItem>
                         <ComboBoxItem>Hermes Lite</ComboBoxItem>
+                        <ComboBoxItem>Hermes Lite 2</ComboBoxItem>
                     </ComboBox>
                 </StackPanel>
                 <Grid Background="AliceBlue">
@@ -62,11 +63,11 @@
 
                             <Label Content="UDP packets - sent" Style="{StaticResource LabelStyle}" HorizontalAlignment="Left"  VerticalAlignment="Top" />
 
-                            <Label Content="{Binding Path=packetsSent}" HorizontalAlignment="Left"  VerticalAlignment="Top" />
-                           <Label Content="received" Style="{StaticResource LabelStyle}" HorizontalAlignment="Left"  VerticalAlignment="Top" />
+                        <!--    <Label Content="{Binding Path=packetsSent}" HorizontalAlignment="Left"  VerticalAlignment="Top" />
+                        -->   <Label Content="received" Style="{StaticResource LabelStyle}" HorizontalAlignment="Left"  VerticalAlignment="Top" />
 
-                            <Label Content="{Binding Path=packetsReceived}" HorizontalAlignment="Left"  VerticalAlignment="Top" />
-
+                         <!--   <Label Content="{Binding Path=packetsReceived}" HorizontalAlignment="Left"  VerticalAlignment="Top" />
+-->
                             <Label Content="seq errs" Style="{StaticResource LabelStyle}" HorizontalAlignment="Left"  VerticalAlignment="Top" />
 
                             <Label Content="{Binding Path=seqErrors}" HorizontalAlignment="Left"  VerticalAlignment="Top" />
