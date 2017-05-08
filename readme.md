@@ -25,7 +25,7 @@ It has been tested with the following sdr clients
 
   * Thetis V2.1.18 will run on same pc.
 
-  * [Radio ?](http://www.ihopper.org/radio/) my client for [Hermes Lite](https://github.com/softerhardware/Hermes-Lite) - emulator will provide up to 32 receivers for hermes lite extended old protocol.
+  * [SparkSDR](http://www.ihopper.org/radio/) my client for [Hermes Lite](https://github.com/softerhardware/Hermes-Lite) - emulator will provide up to 32 receivers for hermes lite extended old protocol.
 
 ## Build
 It can be built with Visual Studio 2013 or Visual Studio 2013 Express desktop edition.
