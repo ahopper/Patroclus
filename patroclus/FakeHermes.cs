@@ -22,7 +22,8 @@ namespace patroclus
 
         public int port { get; set; } //Port for the Client to use
         public byte boardID { get; set; }
-
+        public byte hermesCodeVersion { get; set; }
+        
         ConcurrentQueue<receivedPacket> msgQueue = new ConcurrentQueue<receivedPacket>();
         
         IPEndPoint ClientIpEndPoint;
@@ -40,7 +41,7 @@ namespace patroclus
   
         int progSeqNo = 0;
         double timebase = 0.0;
-        byte hermesCodeVersion = 30;
+        
         DateTime startTime;
         bool running = false;
         bool bsrunning = false;

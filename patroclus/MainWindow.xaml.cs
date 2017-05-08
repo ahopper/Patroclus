@@ -34,6 +34,7 @@ namespace patroclus
             var hermes = new FakeHermes();
             
             hermes.boardID = 1;
+            hermes.hermesCodeVersion = 30;
             hermes.port = 1024;
             hermes.start();
 
@@ -46,6 +47,7 @@ namespace patroclus
             var hermes = new FakeHermes();
 
             hermes.boardID = 6;
+            hermes.hermesCodeVersion = 30;
             hermes.port = 1024;
             hermes.start();
 
@@ -57,7 +59,8 @@ namespace patroclus
             if (radio != null) radio.Stop();
             var hermes = new FakeHermes();
             
-            hermes.boardID = 7;
+            hermes.boardID = 6;
+            hermes.hermesCodeVersion = 40;
             hermes.port = 1024;
             hermes.start();
 
