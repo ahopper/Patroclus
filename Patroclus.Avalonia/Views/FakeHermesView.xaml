@@ -1,0 +1,63 @@
+﻿<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:v="clr-namespace:Patroclus.Avalonia.Views;assembly=Patroclus.Avalonia"
+             xmlns:p="clr-namespace:Patroclus;assembly=Patroclus.Avalonia"
+>
+  <StackPanel Orientation="Vertical">
+
+    <ItemsControl  Items="{Binding Path=ccbits}" HorizontalAlignment="Stretch"  Margin="0,1,0,0" VerticalAlignment="Top" >
+      <ItemsControl.ItemsPanel>
+        <ItemsPanelTemplate>
+          <WrapPanel Orientation="Horizontal" />
+        </ItemsPanelTemplate>
+      </ItemsControl.ItemsPanel>
+      <ItemsControl.ItemTemplate>
+        <DataTemplate>
+          <TextBlock Margin="4,1,1,1" Text="{Binding  Converter={x:Static p:StringConverters.StringFormat},ConverterParameter=\{0:x8\} }"></TextBlock>
+        </DataTemplate>
+      </ItemsControl.ItemTemplate>
+    </ItemsControl>
+
+    <TextBox ScrollViewer.HorizontalScrollBarVisibility="Disabled"
+            ScrollViewer.VerticalScrollBarVisibility="Auto"
+             IsReadOnly="True" Height="50" Text="{Binding log}" ></TextBox>
+
+
+    <StackPanel Orientation="Horizontal" Gap="12">
+
+
+
+      <TextBlock Text="Bandwidth"  HorizontalAlignment="Left"  VerticalAlignment="Top"/>
+      <TextBlock Text="{Binding Path=bandwidth}" HorizontalAlignment="Left"  VerticalAlignment="Top" />
+      <TextBlock Text="Status"  HorizontalAlignment="Left"  VerticalAlignment="Top" />
+      <TextBlock Text="{Binding Path=status}" HorizontalAlignment="Left"  VerticalAlignment="Top" />
+
+      <TextBlock Text="UDP packets - sent"  HorizontalAlignment="Left"  VerticalAlignment="Top" />
+
+
+      <TextBlock Text="received"  HorizontalAlignment="Left"  VerticalAlignment="Top" />
+
+
+      <TextBlock Text="seq errs"  HorizontalAlignment="Left"  VerticalAlignment="Top" />
+
+      <TextBlock Text="{Binding Path=seqErrors}" HorizontalAlignment="Left"  VerticalAlignment="Top" />
+
+
+    </StackPanel>
+    <StackPanel Orientation="Horizontal" Gap="10">
+      <TextBlock Text="TX1" HorizontalAlignment="Left"  VerticalAlignment="Top" FontWeight="Bold" />
+      <TextBlock Text="VFO Hz"  HorizontalAlignment="Left"  VerticalAlignment="Top" />
+
+      <TextBlock Text="{Binding Path=txNCO, Converter={x:Static p:StringConverters.StringFormat},ConverterParameter=\{0:### ### ###\}}"  HorizontalAlignment="Left"  VerticalAlignment="Top" />
+      <TextBlock Text="Duplex"   HorizontalAlignment="Left"  VerticalAlignment="Top" />
+
+      <TextBlock Text="{Binding Path=duplex}" HorizontalAlignment="Left"  VerticalAlignment="Top" />
+      <TextBlock Text="Clock error" HorizontalAlignment="Left"  VerticalAlignment="Top" />
+      <Slider  Width="100" Orientation="Horizontal" HorizontalAlignment="Left"
+               Value="{Binding Path=clockError, Mode=TwoWay}" Minimum="900" Maximum="1100"
+                  SmallChange="1" LargeChange="10"
+                   TickFrequency="10" />
+
+    </StackPanel>
+  </StackPanel>
+</UserControl>

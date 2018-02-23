@@ -1,0 +1,42 @@
+﻿<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:v="clr-namespace:Patroclus.Avalonia.Views;assembly=Patroclus.Avalonia"
+             xmlns:vm="clr-namespace:Patroclus.Avalonia.ViewModels;assembly=Patroclus.Avalonia"
+             xmlns:p="clr-namespace:Patroclus;assembly=Patroclus.Avalonia"
+      
+       >
+  <StackPanel Orientation="Horizontal" Background="AliceBlue" Margin="1,1,1,1"  Gap="10">
+    <TextBlock Text="{Binding Path=name}" HorizontalAlignment="Left"  VerticalAlignment="Top" FontWeight="Bold" />
+    <TextBlock Text="VFO Hz"  HorizontalAlignment="Left"  VerticalAlignment="Top" />
+    <TextBlock Text="{Binding vfo, Converter={x:Static p:StringConverters.StringFormat},ConverterParameter=\{0:### ### ###\}}"  HorizontalAlignment="Left"  VerticalAlignment="Top" Width="80"/>
+    <Button  VerticalAlignment="Top" ToolTip.Tip="Add sine wave generator" Command="{Binding AddSineCommand}">
+      <TextBlock FontFamily="Segoe UI Symbol" Text="&#xe189;"></TextBlock>
+    </Button>
+    <Button  Margin="4,0,2,0" VerticalAlignment="Top" ToolTip.Tip="Add wav file generator" Command="{Binding AddWavCommand}">
+      <TextBlock FontFamily="Segoe UI Symbol" Text="&#x1f4bf;"></TextBlock>
+    </Button>
+    <ItemsControl Items="{Binding Path=generators}" HorizontalAlignment="Left" VerticalAlignment="Top" >
+      <ItemsControl.ItemsPanel>
+        <ItemsPanelTemplate>
+          <StackPanel Orientation="Vertical" Background="White" />
+        </ItemsPanelTemplate>
+      </ItemsControl.ItemsPanel>
+      <ItemsControl.ItemTemplate>
+        <DataTemplate>
+          <ContentControl Content="{Binding}">
+            <ContentControl.DataTemplates>
+              <DataTemplate DataType="{x:Type vm:WavFileGenerator}">
+                <v:WavFileGeneratorView></v:WavFileGeneratorView>
+              </DataTemplate>
+              <DataTemplate DataType="{x:Type vm:SineWaveGenerator}">
+                <v:SineWaveGeneratorView></v:SineWaveGeneratorView>
+              </DataTemplate>
+            </ContentControl.DataTemplates>
+          </ContentControl>
+        </DataTemplate>
+      </ItemsControl.ItemTemplate>
+    </ItemsControl>
+
+  </StackPanel>
+  
+</UserControl>

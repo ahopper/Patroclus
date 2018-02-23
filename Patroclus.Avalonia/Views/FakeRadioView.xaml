@@ -1,0 +1,36 @@
+﻿<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:v="clr-namespace:Patroclus.Avalonia.Views;assembly=Patroclus.Avalonia"
+             xmlns:vm="clr-namespace:Patroclus.Avalonia.ViewModels;assembly=Patroclus.Avalonia"
+             xmlns:p="clr-namespace:Patroclus;assembly=Patroclus.Avalonia"
+            >
+  <Grid RowDefinitions="auto,*"  >
+        
+        <Grid Background="AliceBlue">
+          <ContentControl Content="{Binding}">
+            <ContentControl.DataTemplates>
+              <DataTemplate DataType="{x:Type vm:FakeHermes}">
+                <v:FakeHermesView/>
+              </DataTemplate>
+              <DataTemplate DataType="{x:Type vm:FakeHermesNewProtocol}">
+                <v:FakeHermesNewProtocolView/>
+              </DataTemplate>
+            </ContentControl.DataTemplates>
+          </ContentControl>
+      </Grid>
+     <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Visible" >
+      <ItemsControl   Items="{Binding Path=receivers}" HorizontalAlignment="Left"  Margin="0,1,0,0" VerticalAlignment="Top" >
+          <ItemsControl.ItemsPanel>
+            <ItemsPanelTemplate>
+              <StackPanel Orientation="Vertical" Margin="0,1,0,1"  />
+            </ItemsPanelTemplate>
+          </ItemsControl.ItemsPanel>
+          <ItemsControl.ItemTemplate>
+            <DataTemplate>
+              <v:receiverView></v:receiverView>
+             </DataTemplate>
+          </ItemsControl.ItemTemplate>
+        </ItemsControl>
+        </ScrollViewer>
+    </Grid>
+</UserControl>

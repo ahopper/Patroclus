@@ -1,0 +1,33 @@
+﻿<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:vm="clr-namespace:Patroclus.Avalonia.ViewModels;assembly=Patroclus.Avalonia"
+        xmlns:v="clr-namespace:Patroclus.Avalonia.Views;assembly=Patroclus.Avalonia"
+        xmlns:c="clr-namespace:Patroclus.Avalonia.Controls;assembly=Patroclus.Avalonia"
+        xmlns:p="clr-namespace:Patroclus;assembly=Patroclus.Avalonia"
+        Icon="resm:Patroclus.Avalonia.Assets.avalonia-logo.ico"
+        Title="Patroclus.Avalonia"
+        Width="600" Height="400"
+        >
+  <!--
+  <Design.DataContext>
+    <vm:MainWindowViewModel/>
+  </Design.DataContext>-->
+
+  <DockPanel >
+    <StackPanel DockPanel.Dock="Top">
+      <StackPanel Orientation="Horizontal" Gap="10">
+        <TextBlock Text="Radio:" />
+        <DropDown SelectedIndex="{Binding radioType, Mode=TwoWay}"  >
+          <DropDownItem>HPSDR Hermes</DropDownItem>
+          <DropDownItem>HPSDR Hermes new protocol</DropDownItem>
+          <DropDownItem>Hermes Lite</DropDownItem>
+          <DropDownItem>Hermes Lite 2</DropDownItem>
+        </DropDown>
+      </StackPanel>
+       
+    </StackPanel>
+    
+    <v:FakeRadioView DataContext="{Binding radio}"></v:FakeRadioView>
+    
+  </DockPanel>
+</Window>
