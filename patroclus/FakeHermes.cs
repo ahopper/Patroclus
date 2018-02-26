@@ -650,7 +650,7 @@ namespace patroclus
                 case 122: log += string.Format("I2C2 {0:x2} {1:x2} {2:x2} {3:x2} {4:x2}\r\n", c0, c1, c2, c3, c4); break; 
 
 
-                default: Console.WriteLine(string.Format("Unhandled Control message {0}\t{1}\t{2}\t{3}\t{4}", c0, c1, c2, c3, c4)); break;
+             //   default: Console.WriteLine(string.Format("Unhandled Control message {0}\t{1}\t{2}\t{3}\t{4}", c0, c1, c2, c3, c4)); break;
 
             }
         }

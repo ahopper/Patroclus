@@ -154,3 +154,7 @@ $RECYCLE.BIN/
 
 # Mac desktop service store files
 .DS_Store
+/.vs/patroclus/v15/Server/sqlite3
+/packages/MahApps.Metro.0.14.0.0
+/Patroclus.Avalonia/.vs/Patroclus.Avalonia/v15/Server/sqlite3
+/Patroclus.Avalonia/Properties/PublishProfiles

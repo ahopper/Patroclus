@@ -197,6 +197,7 @@ namespace Patroclus.Avalonia.ViewModels
         }
         long actualPacketCount = 0;
         int txReturnState = 0;
+        int bandScopeHoldoff = 0;
         void handleComms()
         {
             while (!closing)
@@ -289,11 +290,14 @@ namespace Patroclus.Avalonia.ViewModels
                         packetsSent++;
                     }
                 }
-             //   long nBsPacketsCalculated = 48000 / 512 * totalTime / 1000;
-             //   uint BsPacketsToSend = ((uint)nBsPacketsCalculated) - seqNoBs;
-             //   for (int i = 0; i < BsPacketsToSend; i++)
-                   if(bsrunning) sendBandscope();
-
+                //   long nBsPacketsCalculated = 48000 / 512 * totalTime / 1000;
+                //   uint BsPacketsToSend = ((uint)nBsPacketsCalculated) - seqNoBs;
+                //   for (int i = 0; i < BsPacketsToSend; i++)
+                if (bsrunning && bandScopeHoldoff++ > 10)
+                {
+                    bandScopeHoldoff = 0;
+                    sendBandscope();
+                }
                 Thread.Sleep(1);
             }
         }
@@ -375,17 +379,30 @@ namespace Patroclus.Avalonia.ViewModels
                 
         }
 
-
+        ConcurrentStack<receivedPacket> rxBuffers = new ConcurrentStack<receivedPacket>();
         private void readUDP(UdpClient udpClient)
         {
+            
             Task.Run(async () =>
             {
                 while (!closing)
                 {
-                    
-                    //todo reuse buffers udpClient.Client.ReceiveAsync()
-                    var received = await udpClient.ReceiveAsync();
-                    msgQueue.Enqueue(new receivedPacket() { received = received.Buffer, endPoint = received.RemoteEndPoint, timeStamp = stopwatch.Elapsed });
+
+                    //todo reuse buffers 
+                    receivedPacket buff = null;
+                    if(!rxBuffers.TryPop(out buff))
+                    { 
+                        buff= new receivedPacket() { received = new byte[1032] };
+                    }
+
+                    //  var received = await udpClient.Client.ReceiveAsync(buff, SocketFlags.None );
+                    var remEndPoint = new IPEndPoint(IPAddress.Any,0);
+                    var received = await udpClient.Client.ReceiveMessageFromAsync(buff.received, SocketFlags.None, remEndPoint);
+
+
+                    //     var received = await udpClient.ReceiveAsync();
+                    buff.endPoint = (IPEndPoint)received.RemoteEndPoint;
+                    msgQueue.Enqueue(buff);
                 }
             });
         }
@@ -546,6 +563,7 @@ namespace Patroclus.Avalonia.ViewModels
             }
             else { }
 
+            rxBuffers.Push(packet);
         }
         void resetTransmission()
         {
@@ -560,16 +578,12 @@ namespace Patroclus.Avalonia.ViewModels
             int index=c0>>1;
             if (index < ccbits.Count)
             {
+                uint newVal= ((uint)c1 << 24) | ((uint)c2 << 16) | ((uint)c3 << 8) | (uint)c4;
 
-                Dispatcher.UIThread.InvokeAsync(new Action(() =>{ ccbits[index] = ((uint)c1 << 24) | ((uint)c2 << 16) | ((uint)c3 << 8) | (uint)c4; }));
-/*
-                Application.Current.Dispatcher.BeginInvoke(
-                              DispatcherPriority.Background,
-                                new Action(() =>
-                                {
-                                    model.allRadios.Add(radio);
-                                }));
-  */
+                if (newVal != ccbits[index])
+                {
+                    Dispatcher.UIThread.InvokeAsync(new Action(() => { ccbits[index] = newVal; }));
+                }
 //   ccbits[index] = ((uint)c1 << 24) | ((uint)c2 << 16) | ((uint)c3 << 8) | (uint)c4;
             }
             bool tx = ((c0 & 1) == 1);
