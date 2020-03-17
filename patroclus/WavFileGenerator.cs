@@ -50,7 +50,8 @@ namespace patroclus
                 {
                     while (twav == null)
                     {
-                        switch (reader.ReadUInt32())
+                        uint section = reader.ReadUInt32();
+                        switch (section)
                         {
                             case riffRiffHeader:
                                 chunksize = reader.ReadUInt32();
@@ -64,14 +65,18 @@ namespace patroclus
                                 bps=reader.ReadInt32();
                                 bps2 = reader.ReadUInt16();
                                 bitsPerSample = reader.ReadUInt16();
+                                if(chunksize>16)
+                                {
+                                    reader.BaseStream.Seek(chunksize-16, SeekOrigin.Current);
+                                }
                                 break;
                             case riffData:
                                 chunksize = reader.ReadUInt32();
-                           //     twav = reader.ReadBytes((int)chunksize);
-                           //     pos = 0;
-                           //     wav = twav;
-                           //     break;
-                                return;
+                                twav = reader.ReadBytes((int)chunksize);
+                                pos = 0;
+                                wav = twav;
+                                break;
+                          //      return;
                             default:
                                 chunksize = reader.ReadUInt32();
                                 reader.BaseStream.Seek(chunksize, SeekOrigin.Current);
@@ -85,7 +90,7 @@ namespace patroclus
         
         private byte[] wav;
         private int pos = 0;
-        
+        private int padding = 0;
         public double damplitude = 0.0;
         
         private int _amplitude = 0;
@@ -137,8 +142,8 @@ namespace patroclus
         }
         public override void GenerateSignal(double[] outbuf, int nSamples, double timebase, double timestep, double vfo)
         {
-         //   if (wav == null) return;
-            if (reader == null) return;
+            if (wav == null) return;
+         /*   if (reader == null) return;
             int len=nSamples*2 * bitsPerSample / 8;
             if(wav==null || wav.Length!=len)
             {
@@ -148,23 +153,49 @@ namespace patroclus
             {
                 loadWav(filename);
             }
-            
-            pos=0;
+           */ 
+        //    pos=0;
             int idx = 0;
             switch(bitsPerSample)
             { 
-                case 16:            
-                    while (idx < 2 * nSamples)
+                case 16:
+                    if (channels == 1)
                     {
-                  //      if (pos >= wav.Length) pos = 0;
-                        short val = (short)((wav[pos++] << 8) + wav[pos++]);
-                        outbuf[idx++] += ((double)val)/32768 * damplitude; 
+                        while (idx <2* nSamples)
+                        {
+                            if (padding > 0)
+                            {
+                                idx += 2;
+                                padding--;
+                            }
+                            else
+                            {
+                                if (pos >= wav.Length) pos = 0;
+                                //   short val = (short)((wav[pos++] << 8) + wav[pos++]);
+                                short val = (short)(wav[pos++] + (wav[pos++] << 8));
+                                double sig = ((double)val) / 32768 * damplitude;
+                                // mix with dc to create iq and image
+                                outbuf[idx++] += sig;
+                                idx++;
+                                padding = 48000 / sampleRate - 1;
+                            }
+                            
+                        }
+                    }
+                    else
+                    {
+                        while (idx < 2 * nSamples)
+                        {
+                            if (pos >= wav.Length) pos = 0;
+                            short val = (short)((wav[pos++] << 8) + wav[pos++]);
+                            outbuf[idx++] += ((double)val) / 32768 * damplitude;
+                        }
                     }
                     break;
                 case 24:
                     while (idx < 2 * nSamples)
                     {
-                  //      if (pos >= wav.Length) pos = 0;
+                        if (pos >= wav.Length) pos = 0;
                       //  int val = (int)((wav[pos++] << 24) | (wav[pos++] << 16) | (wav[pos++] << 8));
                         int val = (int)((wav[pos++] << 8) | (wav[pos++] << 16) | (wav[pos++] << 24));
                             

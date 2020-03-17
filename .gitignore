@@ -158,3 +158,9 @@ $RECYCLE.BIN/
 /packages/MahApps.Metro.0.14.0.0
 /Patroclus.Avalonia/.vs/Patroclus.Avalonia/v15/Server/sqlite3
 /Patroclus.Avalonia/Properties/PublishProfiles
+/.vs/patroclus/DesignTimeBuild/.dtbcache
+/.vs/patroclus/v16/Server/sqlite3/db.lock
+/.vs/patroclus/v16/Server/sqlite3/storage.ide
+/.vs/patroclus/v16/Server/sqlite3/storage.ide-shm
+/.vs/patroclus/v16/Server/sqlite3/storage.ide-wal
+/.vs/patroclus/v16/TestStore/0
