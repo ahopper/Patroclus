@@ -4,8 +4,9 @@
         xmlns:v="clr-namespace:Patroclus.Avalonia.Views;assembly=Patroclus.Avalonia"
         xmlns:c="clr-namespace:Patroclus.Avalonia.Controls;assembly=Patroclus.Avalonia"
         xmlns:p="clr-namespace:Patroclus;assembly=Patroclus.Avalonia"
-        Icon="resm:Patroclus.Avalonia.Assets.avalonia-logo.ico"
+        Icon="avares://Patroclus.Avalonia/Assets/avalonia-logo.ico"
         Title="Patroclus.Avalonia"
+        x:Class="Patroclus.Avalonia.Views.MainWindow"
         Width="600" Height="400"
         >
   <!--
@@ -15,7 +16,7 @@
 
   <DockPanel >
     <StackPanel DockPanel.Dock="Top">
-      <StackPanel Orientation="Horizontal" Gap="10">
+      <StackPanel Orientation="Horizontal" Spacing="10">
         <TextBlock Text="Radio:" />
         <DropDown SelectedIndex="{Binding radioType, Mode=TwoWay}"  >
           <DropDownItem>HPSDR Hermes</DropDownItem>

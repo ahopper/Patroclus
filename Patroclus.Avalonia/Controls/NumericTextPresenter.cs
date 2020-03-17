@@ -135,7 +135,6 @@ namespace Patroclus.Avalonia.Controls
 
         public override void Render(DrawingContext context)
         {
-       
             var background = Background;
 
             if (background != null)
@@ -155,7 +154,7 @@ namespace Patroclus.Avalonia.Controls
             if (_caretBlink)
             {
 
-                var s = FormattedText[0].Measure();
+                var s = FormattedText[0].Bounds;//.Measure();
                 //places -_caretIndex
                 
 
@@ -169,24 +168,46 @@ namespace Patroclus.Avalonia.Controls
                     new Point(x, y),
                     new Point(x+_charWidth, y));
             }
-
-           
+            // todo remove bodge to make dirty rect fill control
+         /*   context.DrawLine(
+                    new Pen(Brushes.Black, 1),
+                    new Point(xt, 0),
+                    new Point(xt+1 , 1));
+         */   
         }
-        
+        static string[] numbers = { "0", "1", "2", "3", "4", "5", "6", "7", "8", "9" };
+            
         protected virtual FormattedText[] CreateFormattedText(Size constraint)
         {
+#if AV09X 
+            var typeface = new Typeface(FontFamily, FontSize, FontStyle, FontWeight);
+
             FormattedText measure = new FormattedText
             {
                 Constraint = constraint,
-                Typeface = new Typeface(FontFamily, FontSize, FontStyle, FontWeight),
+                Typeface = typeface,
                 Text = "8",
                 TextAlignment = TextAlignment,
-                Wrapping = TextWrapping,
+              //  FontSize = FontSize,
+              //  TextWrapping = TextWrapping,
             };
-            _charWidth = measure.Measure().Width;
-            measure.Text = ",";
-            _commaWidth = measure.Measure().Width;
+#else
+            var typeface = new Typeface(FontFamily, FontWeight, FontStyle);
+            FormattedText measure = new FormattedText
+            {
+                Constraint = constraint,
+                Typeface = typeface,
+                Text = "8",
+                TextAlignment = TextAlignment,
+                FontSize = FontSize,
+                TextWrapping = TextWrapping,
+            };
+#endif
 
+            _charWidth = measure.Bounds.Width;//   Measure().Width;
+            measure.Text = ",";
+            _commaWidth = measure.Bounds.Width;// Measure().Width;
+            
             FormattedText[] text = new FormattedText[places + (places +2)/ 3 - 1];
             int column = 0;
             int place = places - 1;
@@ -195,26 +216,48 @@ namespace Patroclus.Avalonia.Controls
                 int mul = (int)Math.Pow(10, place);
                 int value = (int)Value;
                 value = value / mul % 10;
-                string c = value.ToString();
+                string c = numbers[value];// value.ToString();
+#if AV09X
                 text[column++] = new FormattedText
                 {
                     Constraint = constraint,
-                    Typeface = new Typeface(FontFamily, FontSize, FontStyle, FontWeight),
+                    Typeface = typeface,
                     Text = c,
                     TextAlignment = TextAlignment,
-                    Wrapping = TextWrapping,
+                 };
+                if (place % 3 == 0 && place > 0)
+                {
+                    text[column++] = new FormattedText
+                    {
+                        Constraint = constraint,
+                        Typeface = typeface,
+                        Text = ",",
+                        TextAlignment = TextAlignment,
+                    };
+                }
+#else
+                text[column++] = new FormattedText
+                {
+                    Constraint = constraint,
+                    Typeface = typeface,
+                    Text = c,
+                    FontSize = FontSize,
+                    TextAlignment = TextAlignment,
+                    TextWrapping = TextWrapping,
                 };
                 if (place % 3 == 0 && place > 0)
                 {
                     text[column++] = new FormattedText
                     {
                         Constraint = constraint,
-                        Typeface = new Typeface(FontFamily, FontSize, FontStyle, FontWeight),
+                        Typeface = typeface,
                         Text = ",",
+                        FontSize = FontSize,
                         TextAlignment = TextAlignment,
-                        Wrapping = TextWrapping,
+                        TextWrapping = TextWrapping,
                     };
                 }
+#endif
                 place--;
             }
             return text;
@@ -230,7 +273,7 @@ namespace Patroclus.Avalonia.Controls
         /// Defines the <see cref="FontFamily"/> property.
         /// </summary>
   
-        public static readonly StyledProperty<string> FontFamilyProperty =
+        public static readonly AttachedProperty<FontFamily> FontFamilyProperty =
             TextBlock.FontFamilyProperty.AddOwner<NumericTextPresenter>();
      
         /// <summary>
@@ -270,7 +313,7 @@ namespace Patroclus.Avalonia.Controls
             AvaloniaProperty.Register<NumericTextPresenter, TextWrapping>(nameof(TextWrapping));
 
         private FormattedText[] _formattedText;
-        private Size _constraint;
+ //       private Size _constraint;
 
         /// <summary>
         /// Initializes static members of the <see cref="NumericTextPresenter"/> class.
@@ -278,10 +321,14 @@ namespace Patroclus.Avalonia.Controls
         static NumericTextPresenter()
         {
             ClipToBoundsProperty.OverrideDefaultValue<NumericTextPresenter>(true);
-            AffectsRender(ForegroundProperty);
-            AffectsRender(FontWeightProperty);
-            AffectsRender(FontSizeProperty);
-            AffectsRender(FontStyleProperty);
+            AffectsRender<NumericTextPresenter>(ForegroundProperty,FontWeightProperty,FontSizeProperty,FontStyleProperty,ValueProperty);
+
+            Observable.Merge(
+                    ValueProperty.Changed,
+                    TextAlignmentProperty.Changed,
+                    FontSizeProperty.Changed,
+                    FontStyleProperty.Changed,
+                    FontWeightProperty.Changed).AddClassHandler<NumericTextPresenter>((x, _) => x.InvalidateFormattedText());
         }
 
         /// <summary>
@@ -289,16 +336,7 @@ namespace Patroclus.Avalonia.Controls
         /// </summary>
         public NumericTextPresenter()
         {
-            Observable.Merge(
-                this.GetObservable(ValueProperty).Select(_ => Unit.Default),
-                this.GetObservable(TextAlignmentProperty).Select(_ => Unit.Default),
-                this.GetObservable(FontSizeProperty).Select(_ => Unit.Default),
-                this.GetObservable(FontStyleProperty).Select(_ => Unit.Default),
-                this.GetObservable(FontWeightProperty).Select(_ => Unit.Default))
-                .Subscribe(_ =>
-                {
-                    InvalidateFormattedText();
-                });
+            
         }
 
         /// <summary>
@@ -315,7 +353,7 @@ namespace Patroclus.Avalonia.Controls
         /// <summary>
         /// Gets or sets the font family.
         /// </summary>
-        public string FontFamily
+        public FontFamily FontFamily
         {
             get { return GetValue(FontFamilyProperty); }
             set { SetValue(FontFamilyProperty, value); }
@@ -366,7 +404,7 @@ namespace Patroclus.Avalonia.Controls
             {
                 if (_formattedText == null)
                 {
-                    _formattedText = CreateFormattedText(_constraint);
+                    _formattedText = CreateFormattedText(Size.Empty);
                 }
 
                 return _formattedText;
@@ -396,7 +434,7 @@ namespace Patroclus.Avalonia.Controls
         /// </summary>
         /// <param name="control">The control.</param>
         /// <returns>The font family.</returns>
-        public static string GetFontFamily(Control control)
+        public static FontFamily GetFontFamily(Control control)
         {
             return control.GetValue(FontFamilyProperty);
         }
@@ -523,8 +561,7 @@ namespace Patroclus.Avalonia.Controls
         {
             var formattedText = FormattedText;
 
-
-            return new Size(places*_charWidth+(places/3-1)+_commaWidth, formattedText[0].Measure().Height);
+            return new Size(places * _charWidth + (places / 3 - 1) + _commaWidth, formattedText[0].Bounds.Height);// Measure().Height);
 
            // return new Size();
         }

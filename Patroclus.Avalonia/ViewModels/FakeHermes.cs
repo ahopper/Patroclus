@@ -607,7 +607,7 @@ namespace Patroclus.Avalonia.ViewModels
                     int nReceivers = ((c4 >> 3) & 0x07) + 1;
                     if(boardID==6)
                     {
-                        nReceivers = ((c4 >> 3) & 0x1f) + 1;
+                        nReceivers = ((c4 >> 3) & 0x0f) + 1;
                     }
                     
                     if(nReceivers!=receivers.Count)
@@ -627,10 +627,12 @@ namespace Patroclus.Avalonia.ViewModels
                         txNCO = t;
                         if (!duplex)
                         {
-                            receivers[0].vfo = txNCO;
-                            receivers[0].generators[0].SetDefaults( receivers[0].vfo);
-                            receivers[0].generators[1].SetDefaults( receivers[0].vfo + 10000);
-                  
+                            if (receivers.Count > 0)
+                            {
+                                receivers[0].vfo = txNCO;
+                                receivers[0].generators[0].SetDefaults(receivers[0].vfo);
+                                receivers[0].generators[1].SetDefaults(receivers[0].vfo + 10000);
+                            }
                         }
                     break;
                 case 4: 

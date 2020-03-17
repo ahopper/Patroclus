@@ -110,15 +110,15 @@ namespace Patroclus.Avalonia.ViewModels
         RelayCommand _SelectFileCommand;
         public ICommand SelectFileCommand
         {
-            get { return _SelectFileCommand ?? (_SelectFileCommand = new RelayCommand(param => this.SelectFileAsync())); }
+            get { return _SelectFileCommand ?? (_SelectFileCommand = new RelayCommand(param => this.SelectFileAsync((Window)param))); }
         }
-        public async void SelectFileAsync()
+        public async void SelectFileAsync( Window parent)
         {
             OpenFileDialog of = new OpenFileDialog();
             //of.DefaultExt = ".wav";
             // of.Filters = { "Wav files|*.wav"};
 
-            string[] files= await of.ShowAsync();
+            string[] files= await of.ShowAsync(parent);
             if(files?.Length>0)
             {
                 filename = files[0];

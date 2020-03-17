@@ -1,53 +1,23 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <OutputType>Exe</OutputType>
-    <TargetFrameworks>netcoreapp2.0</TargetFrameworks>
-    <RuntimeIdentifiers>win7-x86</RuntimeIdentifiers>
+    <TargetFrameworks>netcoreapp3.1</TargetFrameworks>
+    <RuntimeIdentifiers>win-x86</RuntimeIdentifiers>
   </PropertyGroup>
   <ItemGroup>
     <Compile Update="**\*.xaml.cs">
       <DependentUpon>%(Filename)</DependentUpon>
     </Compile>
-    <EmbeddedResource Include="**\*.xaml">
+    <AvaloniaResource Include="**\*.xaml">
       <SubType>Designer</SubType>
-    </EmbeddedResource>
-    <EmbeddedResource Include="Assets\*" />
+    </AvaloniaResource>
+    <AvaloniaResource Include="Assets\*" />
   </ItemGroup>
+  
   <ItemGroup>
-    <None Remove="Controls\MultiSpinner.xaml" />
-    <None Remove="Views\FakeHermesNewProtocolView.xaml" />
-    <None Remove="Views\FakeHermesView.xaml" />
-    <None Remove="Views\FakeRadioView.xaml" />
-    <None Remove="Views\receiverView.xaml" />
-    <None Remove="Views\SineWaveGeneratorView.xaml" />
-    <None Remove="Views\WavFileGeneratorView.xaml" />
+    <PackageReference Include="Avalonia" Version="0.9.999-cibuild0005911-beta" />
+    <PackageReference Include="Avalonia.Desktop" Version="0.9.999-cibuild0005911-beta" />
+    <PackageReference Include="Avalonia.ReactiveUI" Version="0.9.999-cibuild0005911-beta" />
   </ItemGroup>
-  <ItemGroup>
-    <PackageReference Include="Avalonia" Version="0.6.1" />
-    <PackageReference Include="Avalonia.Desktop" Version="0.6.1" />
-    <PackageReference Include="Avalonia.ReactiveUI" Version="0.6.1" />
-  </ItemGroup>
-  <ItemGroup>
-    <Folder Include="Models\" />
-  </ItemGroup>
-  <ItemGroup>
-    <EmbeddedResource Update="Views\FakeHermesNewProtocolView.xaml">
-      <Generator>MSBuild:Compile</Generator>
-    </EmbeddedResource>
-    <EmbeddedResource Update="Views\FakeHermesView.xaml">
-      <Generator>MSBuild:Compile</Generator>
-    </EmbeddedResource>
-    <EmbeddedResource Update="Views\FakeRadioView.xaml">
-      <Generator>MSBuild:Compile</Generator>
-    </EmbeddedResource>
-    <EmbeddedResource Update="Views\receiverView.xaml">
-      <Generator>MSBuild:Compile</Generator>
-    </EmbeddedResource>
-    <EmbeddedResource Update="Views\SineWaveGeneratorView.xaml">
-      <Generator>MSBuild:Compile</Generator>
-    </EmbeddedResource>
-    <EmbeddedResource Update="Views\WavFileGeneratorView.xaml">
-      <Generator>MSBuild:Compile</Generator>
-    </EmbeddedResource>
-  </ItemGroup>
+  
 </Project>

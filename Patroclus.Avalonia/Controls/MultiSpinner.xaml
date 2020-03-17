@@ -1,6 +1,7 @@
 ﻿<Styles xmlns="https://github.com/avaloniaui" 
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:c="clr-namespace:Patroclus.Avalonia.Controls;assembly=Patroclus.Avalonia"
+       
    >
 	<Style Selector="c|MultiSpinner">
 		<Setter Property="Background" Value="{DynamicResource ThemeBackgroundBrush}"/>
@@ -26,13 +27,13 @@
 			</ControlTemplate>
 		</Setter>
 	</Style>
-	<Style Selector="c:MultiSpinner:pointerover /template/ Border#border">
+	<Style Selector="c|MultiSpinner:pointerover /template/ Border#border">
 		<Setter Property="BorderBrush" Value="{DynamicResource ThemeBorderDarkBrush}"/>
 	</Style>
-	<Style Selector="c:MultiSpinner:focus /template/ Border#border">
+	<Style Selector="c|MultiSpinner:focus /template/ Border#border">
 		<Setter Property="BorderBrush" Value="{DynamicResource ThemeBorderDarkBrush}"/>
 	</Style>
-	<Style Selector="c:MultiSpinner:error /template/ Border#border">
+	<Style Selector="c|MultiSpinner:error /template/ Border#border">
 		<Setter Property="BorderBrush" Value="{DynamicResource ErrorBrush}"/>
 	</Style>
 </Styles>

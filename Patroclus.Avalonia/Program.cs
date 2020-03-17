@@ -1,6 +1,7 @@
 ﻿using System;
 using Avalonia;
 using Avalonia.Logging.Serilog;
+using Avalonia.ReactiveUI;
 using Patroclus.Avalonia.ViewModels;
 using Patroclus.Avalonia.Views;
 
@@ -10,7 +11,14 @@ namespace Patroclus.Avalonia
     {
         static void Main(string[] args)
         {
-            BuildAvaloniaApp().Start<MainWindow>(() => new MainWindowViewModel());
+            try
+            {
+                BuildAvaloniaApp().Start<MainWindow>(() => new MainWindowViewModel());
+            }
+            catch(Exception e)
+            {
+                Errorlog.logException(e, "Main");
+            }
         }
 
         public static AppBuilder BuildAvaloniaApp()

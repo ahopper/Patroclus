@@ -1,6 +1,7 @@
 ﻿<UserControl xmlns="https://github.com/avaloniaui"
-             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
-  <StackPanel Orientation="Horizontal" Background="AliceBlue" Margin="1,1,1,1" Gap="6">
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             x:Class="Patroclus.Avalonia.Views.WavFileGeneratorView">
+  <StackPanel Orientation="Horizontal" Background="AliceBlue" Margin="1,1,1,1" Spacing="6">
     <TextBlock Text="Amplitude" HorizontalAlignment="Left"  VerticalAlignment="Top" />
     <Slider  Width="100" Orientation="Horizontal" HorizontalAlignment="Left"
       Value="{Binding Path=amplitude, Mode=TwoWay}" Minimum="-200" Maximum="0"

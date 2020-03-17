@@ -4,9 +4,9 @@ using Avalonia.Markup.Xaml;
 
 namespace Patroclus.Avalonia.Views
 {
-    public class receiverView : UserControl
+    public class ReceiverView : UserControl
     {
-        public receiverView()
+        public ReceiverView()
         {
             this.InitializeComponent();
         }

@@ -65,7 +65,7 @@ namespace Patroclus.Avalonia.Controls
 
         static MultiSpinner()
         {
-            FocusableProperty.OverrideDefaultValue(typeof(MultiSpinner), true);
+            FocusableProperty.OverrideDefaultValue(typeof(MultiSpinner), true);   
         }
 
         public MultiSpinner()
@@ -219,18 +219,18 @@ namespace Patroclus.Avalonia.Controls
             int caretIndex = CaretIndex;
             bool movement = false;
             bool handled = false;
-            var modifiers = e.Modifiers;
+            var modifiers = e.KeyModifiers;
 
             switch (e.Key)
             {
                 case Key.A:
-                    if (modifiers == InputModifiers.Control)
+                    if (modifiers == KeyModifiers.Control)
                     {
                        handled = true;
                     }
                     break;
                 case Key.C:
-                    if (modifiers == InputModifiers.Control)
+                    if (modifiers == KeyModifiers.Control)
                     {
                         Copy();
                         handled = true;
@@ -238,7 +238,7 @@ namespace Patroclus.Avalonia.Controls
                     break;
 
                 case Key.X:
-                    if (modifiers == InputModifiers.Control)
+                    if (modifiers == KeyModifiers.Control)
                     {
                         Copy();
                         handled = true;
@@ -246,7 +246,7 @@ namespace Patroclus.Avalonia.Controls
                     break;
 
                 case Key.V:
-                    if (modifiers == InputModifiers.Control)
+                    if (modifiers == KeyModifiers.Control)
                     {
                         Paste();
                         handled = true;
@@ -255,13 +255,13 @@ namespace Patroclus.Avalonia.Controls
                     break;
 
                 case Key.Z:
-                    if (modifiers == InputModifiers.Control)
+                    if (modifiers == KeyModifiers.Control)
                     {
                         handled = true;
                     }
                     break;
                 case Key.Y:
-                    if (modifiers == InputModifiers.Control)
+                    if (modifiers == KeyModifiers.Control)
                     {
                         handled = true;
                     }
@@ -323,7 +323,7 @@ namespace Patroclus.Avalonia.Controls
                     handled = false;
                     break;
             }
-
+/*
             if (movement && ((modifiers & InputModifiers.Shift) != 0))
             {
                 
@@ -332,7 +332,7 @@ namespace Patroclus.Avalonia.Controls
             {
                 
             }
-
+*/
             if (handled || movement)
             {
                 e.Handled = true;
@@ -349,13 +349,13 @@ namespace Patroclus.Avalonia.Controls
             if (point.Y < Bounds.Height * 0.25) incCol(CaretIndex, +1);
             else if (point.Y > Bounds.Height * 0.75) incCol(CaretIndex, -1);
 
-            e.Device.Capture(_presenter);
+            e.Pointer.Capture(_presenter);
             e.Handled = true;
         }
 
         protected override void OnPointerMoved(PointerEventArgs e)
         {
-            if (_presenter != null && e.Device.Captured == _presenter)
+            if (_presenter != null && e.Pointer.Captured == _presenter)
             {
                 int sensitivity = 8;
                 var point = e.GetPosition(_presenter);
@@ -370,7 +370,7 @@ namespace Patroclus.Avalonia.Controls
 
         protected override void OnPointerReleased(PointerReleasedEventArgs e)
         {
-            if (_presenter != null && e.Device.Captured == _presenter)
+            if (_presenter != null && e.Pointer.Captured == _presenter)
             {
                 var point = e.GetPosition(_presenter);
             //    if (point == _lastPoint)
@@ -378,7 +378,7 @@ namespace Patroclus.Avalonia.Controls
             //        if (point.Y < Bounds.Height * 0.25) incCol(CaretIndex, +1);
             //        else if (point.Y > Bounds.Height * 0.75) incCol(CaretIndex, -1);
             //    }
-                e.Device.Capture(null);
+                e.Pointer.Capture(null);
             }
         }
         protected override void OnPointerWheelChanged(PointerWheelEventArgs e)
@@ -391,7 +391,7 @@ namespace Patroclus.Avalonia.Controls
                 e.Handled = true;
             }
         }
-
+/*
         protected override void UpdateDataValidation(AvaloniaProperty property, BindingNotification status)
         {
             if (property == ValueProperty)
@@ -399,7 +399,7 @@ namespace Patroclus.Avalonia.Controls
                 DataValidationErrors.SetError(this, status.Error);
             }
         }
-
+*/
         private int CoerceCaretIndex(int value) => CoerceCaretIndex(value, places-1);
 
         private int CoerceCaretIndex(int value, int length)
@@ -430,7 +430,7 @@ namespace Patroclus.Avalonia.Controls
                 return 1 + (int)Math.Log10(Maximum);
             }
         }
-        private void MoveHorizontal(int direction, InputModifiers modifiers)
+        private void MoveHorizontal(int direction, KeyModifiers modifiers)
         {
             var caretIndex = CaretIndex;
 
@@ -445,14 +445,14 @@ namespace Patroclus.Avalonia.Controls
             return;                
         }
 
-        private bool MoveVertical(int count, InputModifiers modifiers)
+        private bool MoveVertical(int count, KeyModifiers modifiers)
         {
             incCol(_caretIndex, count);
 
             return true;
         }
 
-        private void MoveHome(InputModifiers modifiers)
+        private void MoveHome(KeyModifiers modifiers)
         {
             
             int caretIndex = 0;
@@ -460,7 +460,7 @@ namespace Patroclus.Avalonia.Controls
             CaretIndex = caretIndex;
         }
 
-        private void MoveEnd(InputModifiers modifiers)
+        private void MoveEnd(KeyModifiers modifiers)
         {
             CaretIndex = places-1;
         }     

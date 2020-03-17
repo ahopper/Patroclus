@@ -3,9 +3,10 @@
              xmlns:v="clr-namespace:Patroclus.Avalonia.Views;assembly=Patroclus.Avalonia"
              xmlns:vm="clr-namespace:Patroclus.Avalonia.ViewModels;assembly=Patroclus.Avalonia"
              xmlns:p="clr-namespace:Patroclus;assembly=Patroclus.Avalonia"
+             x:Class="Patroclus.Avalonia.Views.ReceiverView"
       
        >
-  <StackPanel Orientation="Horizontal" Background="AliceBlue" Margin="1,1,1,1"  Gap="10">
+  <StackPanel Orientation="Horizontal" Background="AliceBlue" Margin="1,1,1,1"  Spacing="10">
     <TextBlock Text="{Binding Path=name}" HorizontalAlignment="Left"  VerticalAlignment="Top" FontWeight="Bold" />
     <TextBlock Text="VFO Hz"  HorizontalAlignment="Left"  VerticalAlignment="Top" />
     <TextBlock Text="{Binding vfo, Converter={x:Static p:StringConverters.StringFormat},ConverterParameter=\{0:### ### ###\}}"  HorizontalAlignment="Left"  VerticalAlignment="Top" Width="80"/>
