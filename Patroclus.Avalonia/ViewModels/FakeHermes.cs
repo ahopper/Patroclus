@@ -58,8 +58,6 @@ namespace Patroclus.Avalonia.ViewModels
         public FakeHermes()
         {
           
-      //      BindingOperations.CollectionRegistering += BindingOperations_CollectionRegistering;
-           
             // make sine wave that fits perfectly in 512 samples so it works for all bandscope lengths
             // TODO make adjustable generator for this
             for(int i=0;i<512;i++)
@@ -70,18 +68,12 @@ namespace Patroclus.Avalonia.ViewModels
                 databufBs[8 + i * 2] = (byte)(val & 0xff);
                 
             }
-            txIQ = new double[63 * 32 * 2];
+            txIQ = new double[63 * 2 * 128];
             txAudio = new double[63 * 8 * 2];
             stopwatch.Start();
         }
 
-  //      void BindingOperations_CollectionRegistering(object sender, CollectionRegisteringEventArgs e)
-  //      {
-  //          if(e.Collection==receivers)BindingOperations.EnableCollectionSynchronization(receivers, _receiversLock);
-  //          else if(e.Collection==ccbits)BindingOperations.EnableCollectionSynchronization(ccbits, _ccbitsLock);
-  //      }
-
-
+  
         private object _ccbitsLock = new object();
         private ObservableCollection<uint> _ccbits = new ObservableCollection<uint>(new List<uint>() { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 });
         public ObservableCollection<uint> ccbits
@@ -177,7 +169,6 @@ namespace Patroclus.Avalonia.ViewModels
             byte[] outValue = new byte[] { 0 };
             client.Client.IOControl(SIO_UDP_CONNRESET, inValue, outValue);
 
-            ///client.BeginReceive(new AsyncCallback(incomming), null);
             readUDP(client);
 
             handleCommsThread = new Thread(handleComms);
@@ -188,7 +179,6 @@ namespace Patroclus.Avalonia.ViewModels
         }
         public override void Stop()
         {
-            //  handleCommsThread.Abort();
             closing = true;
 
             client.Close();
