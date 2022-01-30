@@ -422,27 +422,11 @@ namespace Patroclus.Avalonia.ViewModels
             {
             }
         }
-        //System.IO.StreamWriter logf = null;
-        int logLen = 20;
-
+        
         public void handlePacket(receivedPacket packet)
         {
             byte[] received = packet.received;
-            /*
-            if (logLen > 0)
-            {
-                if(logf==null)logf=System.IO.File.CreateText("hllog.txt");
-
-                logf.Write(received.Length + ", ");
-                for (int i = 0; i < 16; i++) logf.Write(received[i] + ", ");
-                if (received.Length > 700) for (int i = 0; i < 5; i++) logf.Write(received[512 + 11+i] + ", ");
-
-                logf.Write("\r\n");
-
-                logLen--;
-                if (logLen == 0) logf.Dispose();
-            }
-            */
+            
             if (received[2] == 2)
             {
                 //discovery

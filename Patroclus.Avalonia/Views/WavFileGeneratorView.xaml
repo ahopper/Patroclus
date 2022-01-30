@@ -10,7 +10,7 @@
     <TextBlock Text="{Binding Path=amplitude}" HorizontalAlignment="Left"  VerticalAlignment="Top"  MinWidth="30" />
 
     <TextBlock Text="Wav File"  HorizontalAlignment="Left"  VerticalAlignment="Top" />
-    <Button    Command="{Binding SelectFileCommand}" ToolTip.Tip="Open .wav File" VerticalAlignment="Center" >
+    <Button Command="{Binding SelectFileCommand}" CommandParameter="{Binding $parent[Window]}" ToolTip.Tip="Open .wav File" VerticalAlignment="Center" >
       <TextBlock FontFamily="Segoe UI Symbol" Text="&#xe101;"></TextBlock>
     </Button>
 

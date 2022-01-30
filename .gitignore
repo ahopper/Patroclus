@@ -164,3 +164,6 @@ $RECYCLE.BIN/
 /.vs/patroclus/v16/Server/sqlite3/storage.ide-shm
 /.vs/patroclus/v16/Server/sqlite3/storage.ide-wal
 /.vs/patroclus/v16/TestStore/0
+/.vs/patroclus/FileContentIndex
+*.v1
+*.v2
