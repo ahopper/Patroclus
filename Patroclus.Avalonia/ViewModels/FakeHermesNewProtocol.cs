@@ -8,6 +8,7 @@ using System.ComponentModel;
 using System.Linq;
 using System.Net;
 using System.Net.Sockets;
+using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -238,12 +239,13 @@ Bits - [0]Time stamp, [1]VITA-49, [2]VNA mode
         private UdpClient connect(int port)
         {
             UdpClient client = new UdpClient(port);
-
-            const int SIO_UDP_CONNRESET = -1744830452;
-            byte[] inValue = new byte[] { 0 };
-            byte[] outValue = new byte[] { 0 };
-            client.Client.IOControl(SIO_UDP_CONNRESET, inValue, outValue);
-
+            if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+            {
+                const int SIO_UDP_CONNRESET = -1744830452;
+                byte[] inValue = new byte[] { 0 };
+                byte[] outValue = new byte[] { 0 };
+                client.Client.IOControl(SIO_UDP_CONNRESET, inValue, outValue);
+            }
             return client;
         }
         public override void Stop()

@@ -9,6 +9,7 @@ using System.Diagnostics;
 using System.Linq;
 using System.Net;
 using System.Net.Sockets;
+using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -163,12 +164,13 @@ namespace Patroclus.Avalonia.ViewModels
         public void start()
         {
             client = new UdpClient(port);
-
-            const int SIO_UDP_CONNRESET = -1744830452;
-            byte[] inValue = new byte[] { 0 };
-            byte[] outValue = new byte[] { 0 };
-            client.Client.IOControl(SIO_UDP_CONNRESET, inValue, outValue);
-
+            if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+            {
+                const int SIO_UDP_CONNRESET = -1744830452;
+                byte[] inValue = new byte[] { 0 };
+                byte[] outValue = new byte[] { 0 };
+                client.Client.IOControl(SIO_UDP_CONNRESET, inValue, outValue);
+            }
             readUDP(client);
 
             handleCommsThread = new Thread(handleComms);
