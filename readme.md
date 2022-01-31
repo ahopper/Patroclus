@@ -28,8 +28,15 @@ It has been tested with the following sdr clients
   * [SparkSDR](http://www.ihopper.org/radio/) my client for [Hermes Lite](https://github.com/softerhardware/Hermes-Lite) - emulator will provide up to 32 receivers for hermes lite extended old protocol.
 
 ## Build
-It can be built with Visual Studio 2013 or Visual Studio 2013 Express desktop edition.
+
+The original Patroclus project is depreciated but can be built with Visual Studio 2013 or later.
 It uses .net4.5
+
+Patroclus.Avalonia is where any further development will be, it has the advantage of running on windows, linux and macos. To build install the .net6.0 sdk then from the Patroclus.Avalonia directory run the following:-
+
+dotnet restore
+
+dotnet run
 
 ![Patroclus](docs/patroclus.JPG)
 
